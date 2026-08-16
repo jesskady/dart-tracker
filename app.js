@@ -295,12 +295,31 @@ function showWin(p) {
 function render() {
   if (!S) return;
 
+  const pts = turnPoints();
+
   // scoreboard
   S.players.forEach((p, i) => {
     const el = $('p' + i);
-    el.classList.toggle('active', i === S.cur && !S.over);
+    const isTurn = i === S.cur && !S.over;
+    el.classList.toggle('active', isTurn);
     el.querySelector('.pname').textContent = p.name;
-    el.querySelector('.pscore').textContent = p.score;
+    el.querySelector('.pnum').textContent = p.score;
+
+    // live projection of where this turn leaves them
+    const pend = el.querySelector('.ppend');
+    el.classList.toggle('pending', isTurn && pts > 0);
+    pend.classList.remove('bust', 'checkout');
+    if (isTurn && pts > 0) {
+      const left = p.score - pts;
+      if (left < 0) {
+        pend.textContent = '→ bust';
+        pend.classList.add('bust');
+      } else {
+        pend.textContent = '→ ' + left;
+        if (left === 0) pend.classList.add('checkout');
+      }
+    }
+
     const avg = p.turns ? (p.points / p.turns).toFixed(1) : '—';
     el.querySelector('.pmeta').textContent = `${p.turns} turns · avg ${avg}`;
   });
@@ -317,7 +336,6 @@ function render() {
     slots.appendChild(el);
   }
 
-  const pts = turnPoints();
   $('turnTotal').textContent = pts;
   $('lumpValue').textContent = S.lump === '' ? '0' : S.lump;
 
