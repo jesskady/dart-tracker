@@ -11,7 +11,7 @@
 <!-- ?v= must be bumped whenever style.css or app.js changes. GitHub Pages
      caches each file for 10 minutes independently, so without this a new
      index.html can load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -103,10 +103,7 @@
     <div class="turntotal"><span id="turnTotal">0</span><small>this turn</small></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab is-on" data-mode="darts">Darts</button>
-    <button class="tab" data-mode="total">Total</button>
-  </div>
+  <div id="checkout" class="checkout"></div>
 
   <!-- Darts entry -->
   <div id="dartsPad" class="pad">
@@ -121,12 +118,6 @@
       <button class="key special" data-miss="1">Miss</button>
       <button class="key special" id="undoDart">Undo dart</button>
     </div>
-  </div>
-
-  <!-- Lump-sum entry -->
-  <div id="totalPad" class="pad hidden">
-    <div class="lumpview"><span id="lumpValue">0</span></div>
-    <div class="keypad" id="keypad"></div>
   </div>
 
   <div class="actions">
@@ -151,6 +142,6 @@
   </div>
 </div>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

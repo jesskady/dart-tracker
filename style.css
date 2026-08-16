@@ -182,13 +182,21 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .turntotal span{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
 .turntotal small{color:var(--dim);font-size:10px}
 
-.turnbar.lump .darts{display:none}
-.turnbar.lump .turntotal{flex:1;border-left:none;padding-left:0}
-
-/* ---------- Tabs ---------- */
-.tabs{display:flex;gap:8px;background:var(--card);padding:5px;border-radius:12px;border:1px solid var(--line)}
-.tab{flex:1;padding:10px;border-radius:9px;color:var(--dim);font-weight:600}
-.tab.is-on{background:var(--bg2);color:var(--txt);box-shadow:0 1px 3px #0006}
+/* ---------- Checkout suggestion ---------- */
+.checkout{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:6px 10px;
+  border:1px solid var(--line);border-radius:12px;background:var(--card);
+}
+.co-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--dim)}
+.co-darts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.co-darts b{
+  font-size:16px;font-weight:800;letter-spacing:.3px;
+  color:#0f1a13;background:var(--green);
+  padding:3px 9px;border-radius:7px;
+}
+.co-none{font-size:12px;color:var(--dim)}
+.checkout.empty{opacity:.35}
 
 /* ---------- Pads ---------- */
 .pad{display:flex;flex-direction:column;gap:8px}
@@ -212,15 +220,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 .special-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .special{font-size:14px;font-weight:600;padding:13px 0;color:var(--dim)}
-
-/* ---------- Lump sum ---------- */
-.lumpview{
-  background:var(--card);border:1px solid var(--line);border-radius:14px;
-  padding:16px;text-align:center;
-}
-.lumpview span{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums}
-.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.keypad .key{padding:18px 0;font-size:22px}
 
 /* ---------- Actions ---------- */
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
@@ -248,6 +247,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 @media (max-height:620px){
   .pscore{font-size:34px}
   .key{padding:11px 0;font-size:16px}
-  .keypad .key{padding:14px 0}
+  .checkout{min-height:38px}
   .brand{padding:8px 0 0}
 }

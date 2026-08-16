@@ -21,10 +21,8 @@ function newGame(names, start, rules) {
     doubleIn: !!rules.doubleIn,
     doubleOut: !!rules.doubleOut,
     cur: 0,
-    darts: [],       // {label, val}
-    mode: 'darts',
+    darts: [],       // {label, val, dbl}
     mult: 1,
-    lump: '',
     log: [],         // completed turns, for undo
     over: false
   };
@@ -136,35 +134,11 @@ function buildBoard() {
     grid.appendChild(b);
   }
 
-  // lump-sum keypad
-  const pad = $('keypad');
-  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','C'];
-  keys.forEach(k => {
-    const b = document.createElement('button');
-    b.className = 'key';
-    b.textContent = k;
-    b.addEventListener('click', () => lumpKey(k));
-    pad.appendChild(b);
-  });
-
   // multiplier
   document.querySelectorAll('.mult').forEach(b => {
     b.addEventListener('click', () => {
       S.mult = parseInt(b.dataset.m, 10);
       render();
-    });
-  });
-
-  // mode tabs
-  document.querySelectorAll('.tab').forEach(b => {
-    b.addEventListener('click', () => {
-      if (S.mode === b.dataset.mode) return;
-      S.mode = b.dataset.mode;
-      S.darts = [];          // the two entry methods don't mix
-      S.lump = '';
-      S.mult = 1;
-      render();
-      save();
     });
   });
 
@@ -193,7 +167,7 @@ function buildBoard() {
   [0, 1].forEach(i => {
     $('p' + i).addEventListener('click', () => {
       if (S.over || S.cur === i || S.players.length < 2) return;
-      if (S.darts.length || S.lump) { say('Clear the current turn first'); return; }
+      if (S.darts.length) { say('Clear the current turn first'); return; }
       S.cur = i;
       render(); save();
     });
@@ -232,14 +206,6 @@ function undoDart() {
   render(); save();
 }
 
-function lumpKey(k) {
-  if (S.over) return;
-  if (k === 'C') S.lump = '';
-  else if (k === '⌫') S.lump = S.lump.slice(0, -1);
-  else if (S.lump.length < 3) S.lump = (S.lump + k).replace(/^0+(?=\d)/, '');
-  render(); save();
-}
-
 /* Where a turn of `pts` leaves the current player, and whether it's legal.
    Shared by the live projection, the submit button and submitTurn itself. */
 function outcome(pts) {
@@ -249,7 +215,7 @@ function outcome(pts) {
 
   if (S.doubleOut) {
     if (left === 1) return { left, bust: true, win: false, why: 'left 1' };
-    if (left === 0 && S.mode === 'darts') {
+    if (left === 0) {
       const last = S.darts[S.darts.length - 1];
       if (!last || !last.dbl) {
         return { left, bust: true, win: false, why: 'no double to finish' };
@@ -265,12 +231,6 @@ function outcome(pts) {
    score nothing. `open` is the player's state once the turn is applied. */
 function breakdown() {
   const p = S.players[S.cur];
-
-  if (S.mode === 'total') {
-    const raw = parseInt(S.lump, 10) || 0;
-    // no record of individual darts, so a scoring total is taken to have opened
-    return { pts: raw, counted: [], open: p.opened || raw > 0 };
-  }
 
   let open = p.opened;
   let pts = 0;
@@ -292,6 +252,144 @@ function turnPoints() {
   return breakdown().pts;
 }
 
+/* ---------------- checkout suggestions ----------------
+
+   The board only has 62 distinct throws, so the finish is searched rather
+   than looked up in a table: one table would have to cover every
+   (target x darts left x double-out x still-needs-to-open) combination.
+   Candidates are ordered the way a player picks them, and the first
+   complete path found is the one shown — which reproduces the standard
+   checkout chart (170 = T20 T20 D25, 141 = T20 T19 D12, ...). */
+
+/* Setup darts: biggest first. Ties prefer a triple, then a single. */
+const THROWS = (() => {
+  const t = [];
+  for (let n = 20; n >= 1; n--) t.push({ label: 'T' + n, val: 3 * n, dbl: false });
+  for (let n = 20; n >= 1; n--) t.push({ label: String(n), val: n, dbl: false });
+  t.push({ label: '25', val: 25, dbl: false });
+  for (let n = 20; n >= 1; n--) t.push({ label: 'D' + n, val: 2 * n, dbl: true });
+  t.push({ label: 'D25', val: 50, dbl: true });
+  return t.sort((a, b) => b.val - a.val);   // stable, so ties keep the order above
+})();
+
+/* Finishing on a double: the ones players actually aim for, best first. */
+const FINISH_DOUBLES = [20, 16, 18, 12, 10, 8, 14, 6, 4, 2, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1]
+  .map(n => ({ label: 'D' + n, val: 2 * n, dbl: true }))
+  .concat([{ label: 'D25', val: 50, dbl: true }]);
+
+/* Finishing without the double-out rule: easiest throw for the value. */
+const FINISH_ANY = (() => {
+  const t = [];
+  for (let n = 1; n <= 20; n++) t.push({ label: String(n), val: n, dbl: false });
+  t.push({ label: '25', val: 25, dbl: false });
+  for (let n = 1; n <= 20; n++) t.push({ label: 'D' + n, val: 2 * n, dbl: true });
+  t.push({ label: 'D25', val: 50, dbl: true });
+  for (let n = 1; n <= 20; n++) t.push({ label: 'T' + n, val: 3 * n, dbl: false });
+  return t;
+})();
+
+/* Throws grouped by value, for filling in the last setup dart. */
+const BY_VALUE = (() => {
+  const m = new Map();
+  for (const t of THROWS) {
+    if (!m.has(t.val)) m.set(t.val, []);
+    m.get(t.val).push(t);
+  }
+  return m;
+})();
+
+/* How much a player dislikes finishing on each double, by position in the
+   preference order above — D20 best, D1 and the bull worst. */
+const FINISH_RANK = new Map();
+FINISH_DOUBLES.forEach((t, i) => FINISH_RANK.set(t.label, i));
+
+function finishCost(t, needDouble) {
+  if (needDouble || t.dbl) {
+    const r = FINISH_RANK.get(t.label);
+    return (r === undefined ? 20 : r) * 10;
+  }
+  if (t.label === '25') return 10;        // straight-out only, from here down
+  if (t.label[0] === 'T') return 20;
+  return 0;                               // a plain single is the easiest finish
+}
+
+/* Setup darts: aim big, and don't ask a player to hit a double or the bull
+   just to set up. `weight` makes the earlier dart of a three-dart finish
+   matter more, which keeps the biggest scoring throw first. */
+function setupCost(t, weight) {
+  let c = 60 - t.val;
+  if (t.dbl) c += 150;
+  if (t.val === 25 || t.val === 50) c += 100;
+  return c * weight;
+}
+
+/* Every way to make `target` with exactly `n` throws. */
+function setupPaths(target, n, mustOpenDouble) {
+  const out = [];
+  if (n === 1) {
+    for (const t of BY_VALUE.get(target) || []) {
+      if (!mustOpenDouble || t.dbl) out.push([t]);
+    }
+    return out;
+  }
+  for (const t of THROWS) {
+    if (mustOpenDouble && !t.dbl) continue;
+    const rem = target - t.val;
+    if (rem < 1) continue;
+    for (const rest of setupPaths(rem, n - 1, false)) out.push([t, ...rest]);
+  }
+  return out;
+}
+
+/* Cheapest legal path of exactly `darts` throws, by the costs above. */
+function searchFinish(target, darts, needDouble, mustOpenDouble) {
+  const finishers = needDouble ? FINISH_DOUBLES : FINISH_ANY;
+  let best = null, bestCost = Infinity;
+
+  for (const f of finishers) {
+    const rem = target - f.val;
+
+    if (darts === 1) {
+      if (rem !== 0 || (mustOpenDouble && !f.dbl)) continue;
+      const c = finishCost(f, needDouble);
+      if (c < bestCost) { bestCost = c; best = [f]; }
+      continue;
+    }
+
+    if (rem < 1) continue;
+    for (const setup of setupPaths(rem, darts - 1, mustOpenDouble)) {
+      let c = finishCost(f, needDouble);
+      setup.forEach((t, i) => { c += setupCost(t, darts - 1 - i); });
+      if (c < bestCost) { bestCost = c; best = [...setup, f]; }
+    }
+  }
+  return best;
+}
+
+/* Shortest finish available, or null. Tries 1 dart, then 2, then 3.
+   Memoised because render() asks on every dart tapped. */
+const finishCache = new Map();
+
+function findFinish(target, dartsLeft, needDouble, mustOpenDouble) {
+  if (target < 1 || dartsLeft < 1) return null;
+
+  const key = `${target}|${dartsLeft}|${needDouble ? 1 : 0}|${mustOpenDouble ? 1 : 0}`;
+  if (finishCache.has(key)) return finishCache.get(key);
+
+  let path = null;
+  for (let k = 1; k <= dartsLeft && !path; k++) {
+    path = searchFinish(target, k, needDouble, mustOpenDouble);
+  }
+  finishCache.set(key, path);
+  return path;
+}
+
+/* Highest score that could possibly be finished with this many darts. */
+function maxFinish(dartsLeft, needDouble) {
+  if (dartsLeft < 1) return 0;
+  return (needDouble ? 50 : 60) + 60 * (dartsLeft - 1);
+}
+
 /* ---------------- turn resolution ---------------- */
 
 function submitTurn() {
@@ -299,7 +397,6 @@ function submitTurn() {
 
   const { pts, open } = breakdown();
   if (pts > 180) { say('Max 180 in three darts'); return; }
-  if (S.mode === 'total' && S.lump === '') { say('Enter a score, or use the Darts pad'); return; }
 
   const p = S.players[S.cur];
   const before = p.score;
@@ -312,9 +409,7 @@ function submitTurn() {
     wasOpen,
     pts,
     bust,
-    darts: S.darts.slice(),
-    lump: S.lump,
-    mode: S.mode
+    darts: S.darts.slice()
   });
 
   p.turns += 1;
@@ -325,7 +420,6 @@ function submitTurn() {
   }
 
   S.darts = [];
-  S.lump = '';
   S.mult = 1;
 
   if (win) {
@@ -348,8 +442,8 @@ function undoTurn() {
   if (!S.log.length) { say('Nothing to undo'); return; }
 
   // an in-progress turn is discarded first
-  if (S.darts.length || S.lump) {
-    S.darts = []; S.lump = ''; S.mult = 1;
+  if (S.darts.length) {
+    S.darts = []; S.mult = 1;
     render(); save();
     say('Current turn cleared');
     return;
@@ -369,6 +463,32 @@ function undoTurn() {
 
   render(); save();
   say(`Undid ${p.name}'s ${last.pts}`);
+}
+
+function renderCheckout(left) {
+  const box = $('checkout');
+  const dartsLeft = MAX_DARTS - S.darts.length;
+  const mustOpen = S.doubleIn && !S.players[S.cur].opened;
+
+  if (S.over || dartsLeft < 1 || left < 1) {
+    box.className = 'checkout empty';
+    box.innerHTML = '';
+    return;
+  }
+
+  const path = findFinish(left, dartsLeft, S.doubleOut, mustOpen);
+  if (path) {
+    box.className = 'checkout';
+    box.innerHTML = '<span class="co-label">Checkout</span><span class="co-darts">'
+      + path.map(t => `<b>${t.label}</b>`).join('') + '</span>';
+    return;
+  }
+
+  // only worth saying when a finish was even conceivable (bogey numbers)
+  box.className = 'checkout empty';
+  box.innerHTML = left <= maxFinish(dartsLeft, S.doubleOut)
+    ? `<span class="co-none">No ${dartsLeft}-dart finish from ${left}</span>`
+    : '';
 }
 
 function showWin(p) {
@@ -429,8 +549,7 @@ function render() {
     el.querySelector('.pmeta').textContent = `${p.turns} turns · avg ${avg}`;
   });
 
-  // dart slots (hidden when entering a lump sum)
-  document.querySelector('.turnbar').classList.toggle('lump', S.mode === 'total');
+  // dart slots
   const slots = $('dartSlots');
   slots.innerHTML = '';
   for (let i = 0; i < MAX_DARTS; i++) {
@@ -443,17 +562,12 @@ function render() {
   }
 
   $('turnTotal').textContent = pts;
-  $('lumpValue').textContent = S.lump === '' ? '0' : S.lump;
 
-  // multiplier + tabs
   document.querySelectorAll('.mult').forEach(b => {
     b.classList.toggle('is-on', parseInt(b.dataset.m, 10) === S.mult);
   });
-  document.querySelectorAll('.tab').forEach(b => {
-    b.classList.toggle('is-on', b.dataset.mode === S.mode);
-  });
-  $('dartsPad').classList.toggle('hidden', S.mode !== 'darts');
-  $('totalPad').classList.toggle('hidden', S.mode !== 'total');
+
+  renderCheckout(outcome(pts).left);
 
   // submit button
   const btn = $('submitBtn');
