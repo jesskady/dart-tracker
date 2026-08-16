@@ -27,6 +27,7 @@ Then hit **Submit turn** to subtract it and pass play to the other player.
 
 ## Other bits
 
+- A smaller **projected score** appears next to the active player's total as you enter darts, showing what they'd be left on. It reads `bust` in red if the turn overshoots, and turns green on an exact checkout.
 - Running turn count and three-dart average for each player.
 - **Undo turn** rolls back the last completed turn (or clears a turn in progress).
 - Tap the other player's card to switch whose turn it is if you mis-tapped.
