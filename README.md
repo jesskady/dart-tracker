@@ -54,6 +54,7 @@ Because every turn is entered dart by dart, both rules are checked against the a
 - A smaller **projected score** appears next to the active player's total as you enter darts, showing what they'd be left on. It reads `bust` in red if the turn overshoots, and turns green on an exact checkout.
 - Assets are referenced as `style.css?v=N` / `app.js?v=N`. **Bump `N` in `index.html` whenever you change either file** — GitHub Pages caches each file for 10 minutes independently, so without it a fresh `index.html` can load against a stale `app.js`.
 - Running turn count and three-dart average for each player.
+- **Bust** voids the turn: it scores nothing, whatever darts have been entered, and play passes. The app already busts a turn automatically when the arithmetic says so — this is for the cases it can't see, like a bounce-out, a mis-entry, or a throw out of turn. The turn still counts toward the player's turn count and average, exactly as an automatic bust does. No confirmation, since **Undo turn** reverses it cleanly.
 - **Undo turn** rolls back the last completed turn (or clears a turn in progress). **Undo turn** and **New game** both ask for confirmation first, naming exactly what's about to be lost.
 - Tap the other player's card to switch whose turn it is if you mis-tapped (two-player games).
 - The game is saved to `localStorage`, so closing the tab won't lose it — you'll be offered **Resume** next time.

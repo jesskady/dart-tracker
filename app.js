@@ -167,6 +167,7 @@ function buildBoard() {
   document.querySelector('[data-miss]').addEventListener('click', () => addDart(0));
   $('undoDart').addEventListener('click', undoDart);
   $('submitBtn').addEventListener('click', submitTurn);
+  $('bustBtn').addEventListener('click', bustTurn);
   $('undoTurn').addEventListener('click', undoTurn);
 
   $('confirmYes').addEventListener('click', () => closeConfirm(true));
@@ -465,6 +466,35 @@ function submitTurn() {
   else if (S.doubleIn && !wasOpen && open) say(`${p.name} is in`);
   else if (S.doubleIn && !open) say(`${p.name} still needs a double to open`);
 
+  if (S.players.length > 1) S.cur = 1 - S.cur;
+  render(); save();
+}
+
+/* Manual bust: the turn scores nothing and play passes. For busts the app
+   can't infer on its own — a bounce-out, a mis-entry, a throw out of turn. */
+function bustTurn() {
+  if (S.over) return;
+
+  const p = S.players[S.cur];
+  const { open } = breakdown();
+
+  S.log.push({
+    player: S.cur,
+    before: p.score,
+    wasOpen: p.opened,
+    pts: 0,
+    bust: true,
+    darts: S.darts.slice()
+  });
+
+  p.turns += 1;
+  p.opened = open;        // same as an automatic bust: a landed double still opens
+  // p.score deliberately untouched — that is what a bust means
+
+  S.darts = [];
+  S.mult = 1;
+
+  say(`Bust — ${p.name} stays on ${p.score}`);
   if (S.players.length > 1) S.cur = 1 - S.cur;
   render(); save();
 }

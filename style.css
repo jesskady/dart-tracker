@@ -232,7 +232,11 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 /* ---------- Actions ---------- */
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:2px}
-.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mini-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+
+/* voids the turn — a play action, so it reads apart from the two neutral ones */
+.bust-btn{color:#e2857a;border-color:#5a302a;font-weight:600}
+.bust-btn:active{background:#2a1a17;border-color:var(--red)}
 
 .msg{
   text-align:center;font-size:13px;font-weight:600;color:var(--gold);
