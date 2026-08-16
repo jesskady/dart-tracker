@@ -11,7 +11,7 @@
 <!-- ?v= must be bumped whenever style.css or app.js changes. GitHub Pages
      caches each file for 10 minutes independently, so without this a new
      index.html can load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -131,6 +131,16 @@
   <p id="msg" class="msg"></p>
 </section>
 
+<!-- ============ CONFIRM ============ -->
+<div id="confirmOverlay" class="overlay confirm hidden">
+  <div class="win-card">
+    <h2>Are you sure?</h2>
+    <p id="confirmText"></p>
+    <button id="confirmYes" class="danger big">Yes</button>
+    <button id="confirmNo" class="ghost">Cancel</button>
+  </div>
+</div>
+
 <!-- ============ WIN ============ -->
 <div id="winOverlay" class="overlay hidden">
   <div class="win-card">
@@ -142,6 +152,6 @@
   </div>
 </div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

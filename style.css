@@ -120,6 +120,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .primary:active{background:var(--green-d)}
 .big{padding:17px;font-size:18px;width:100%}
 
+.danger{
+  background:var(--red);color:#fff;border-radius:14px;
+  font-weight:700;letter-spacing:.2px;
+}
+.danger:active{background:#962d21}
+
 .ghost{
   color:var(--dim);border:1px solid var(--line);
   border-radius:12px;padding:11px;width:100%;font-size:15px;
@@ -243,6 +249,11 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .trophy{font-size:52px}
 .win-card h2{font-size:26px;color:var(--gold)}
 .win-card p{color:var(--dim);font-size:14px}
+
+/* confirmation sits above the win overlay, and reads as a warning */
+.overlay.confirm{z-index:20}
+.overlay.confirm h2{color:var(--txt);font-size:22px}
+.overlay.confirm p{font-size:15px;line-height:1.45}
 
 @media (max-height:620px){
   .pscore{font-size:34px}

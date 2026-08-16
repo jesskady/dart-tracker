@@ -48,6 +48,27 @@ function say(text, ms = 2600) {
   if (text) msgTimer = setTimeout(() => { $('msg').textContent = ''; }, ms);
 }
 
+/* ---------------- confirmation ----------------
+
+   An in-app sheet rather than window.confirm: it matches the theme, and a
+   native modal on mobile blocks the page until dismissed. */
+
+let confirmResolve = null;
+
+function askConfirm(text, yesLabel) {
+  $('confirmText').textContent = text;
+  $('confirmYes').textContent = yesLabel;
+  $('confirmOverlay').classList.remove('hidden');
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+
+function closeConfirm(answer) {
+  $('confirmOverlay').classList.add('hidden');
+  const resolve = confirmResolve;
+  confirmResolve = null;
+  if (resolve) resolve(answer);
+}
+
 /* ---------------- setup screen ---------------- */
 
 function buildSetup() {
@@ -148,8 +169,18 @@ function buildBoard() {
   $('submitBtn').addEventListener('click', submitTurn);
   $('undoTurn').addEventListener('click', undoTurn);
 
-  $('quitBtn').addEventListener('click', () => {
-    if (S.log.length && !confirm('End this game and return to setup?')) return;
+  $('confirmYes').addEventListener('click', () => closeConfirm(true));
+  $('confirmNo').addEventListener('click', () => closeConfirm(false));
+  $('confirmOverlay').addEventListener('click', e => {
+    if (e.target === $('confirmOverlay')) closeConfirm(false);   // tap outside cancels
+  });
+
+  $('quitBtn').addEventListener('click', async () => {
+    const names = S.players.map(p => `${p.name} on ${p.score}`).join(' and ');
+    const ok = await askConfirm(
+      `This throws away the game in progress — ${names} — and goes back to setup.`,
+      'End game');
+    if (!ok) return;
     S = null; save(); location.reload();
   });
 
@@ -438,16 +469,29 @@ function submitTurn() {
   render(); save();
 }
 
-function undoTurn() {
-  if (!S.log.length) { say('Nothing to undo'); return; }
-
-  // an in-progress turn is discarded first
+async function undoTurn() {
+  // a turn in progress is discarded first, whether or not anything is logged
   if (S.darts.length) {
+    const thrown = S.darts.map(d => d.label).join(', ');
+    const ok = await askConfirm(
+      `This clears the ${S.darts.length} dart${S.darts.length > 1 ? 's' : ''} entered for this turn (${thrown}).`,
+      'Clear turn');
+    if (!ok) return;
     S.darts = []; S.mult = 1;
     render(); save();
     say('Current turn cleared');
     return;
   }
+
+  if (!S.log.length) { say('Nothing to undo'); return; }
+
+  const prev = S.log[S.log.length - 1];
+  const who = S.players[prev.player];
+  const okUndo = await askConfirm(
+    `This rolls back ${who.name}'s last turn of ${prev.pts}` +
+    (prev.bust ? ' (a bust)' : '') + `, back to ${prev.before}.`,
+    'Undo turn');
+  if (!okUndo) return;
 
   const last = S.log.pop();
   const p = S.players[last.player];
