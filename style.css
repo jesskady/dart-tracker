@@ -1,0 +1,206 @@
+:root{
+  --bg:#12161c;
+  --bg2:#182029;
+  --card:#1e2732;
+  --line:#2b3743;
+  --txt:#e8eef5;
+  --dim:#8ea0b3;
+  --green:#2e9e63;
+  --green-d:#247a4d;
+  --red:#c0392b;
+  --gold:#e0b341;
+  --pad: env(safe-area-inset-bottom, 0px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{height:100%}
+
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  overscroll-behavior:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;touch-action:manipulation}
+
+.hidden{display:none !important}
+
+.screen{
+  max-width:520px;
+  margin:0 auto;
+  padding:16px 14px calc(16px + var(--pad));
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:100%;
+}
+
+/* ---------- Setup ---------- */
+.brand{text-align:center;padding:18px 0 6px}
+.brand h1{font-size:30px;letter-spacing:-.5px}
+.brand p{color:var(--dim);font-size:14px;margin-top:4px}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.field{display:flex;align-items:center;gap:12px}
+.field>span{width:80px;flex:none;color:var(--dim);font-size:14px}
+.field-label{color:var(--dim);font-size:14px}
+
+input{
+  flex:1;
+  min-width:0;
+  background:var(--bg2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--txt);
+  padding:12px;
+  font-size:17px;
+  -webkit-user-select:text;
+  user-select:text;
+}
+input:focus{outline:none;border-color:var(--green)}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.preset-row{display:flex;gap:8px}
+.preset{
+  flex:1;padding:12px 0;border-radius:10px;
+  background:var(--bg2);border:1px solid var(--line);
+  font-weight:600;font-size:17px;
+}
+.preset.is-on{background:var(--green-d);border-color:var(--green);color:#fff}
+
+.primary{
+  background:var(--green);color:#fff;border-radius:14px;
+  font-weight:700;letter-spacing:.2px;
+}
+.primary:active{background:var(--green-d)}
+.big{padding:17px;font-size:18px;width:100%}
+
+.ghost{
+  color:var(--dim);border:1px solid var(--line);
+  border-radius:12px;padding:11px;width:100%;font-size:15px;
+}
+.ghost:active{background:var(--card)}
+
+/* ---------- Scoreboard ---------- */
+.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.player{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:14px;
+  padding:12px 8px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:border-color .15s,background .15s;
+}
+.player.active{border-color:var(--green);background:#1c2b23}
+.pname{
+  font-size:14px;color:var(--dim);font-weight:600;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.player.active .pname{color:var(--green)}
+.pscore{font-size:44px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+.pmeta{font-size:11px;color:var(--dim);min-height:14px}
+
+/* ---------- Turn bar ---------- */
+.turnbar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:10px;
+}
+.darts{display:flex;gap:6px;flex:1}
+.slot{
+  flex:1;text-align:center;padding:9px 2px;
+  background:var(--bg2);border:1px dashed var(--line);border-radius:10px;
+  font-size:16px;font-weight:700;color:var(--dim);
+}
+.slot.filled{border-style:solid;border-color:var(--green);color:var(--txt)}
+.turntotal{
+  text-align:center;min-width:64px;
+  border-left:1px solid var(--line);padding-left:10px;
+}
+.turntotal span{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.turntotal small{color:var(--dim);font-size:10px}
+
+.turnbar.lump .darts{display:none}
+.turnbar.lump .turntotal{flex:1;border-left:none;padding-left:0}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:8px;background:var(--card);padding:5px;border-radius:12px;border:1px solid var(--line)}
+.tab{flex:1;padding:10px;border-radius:9px;color:var(--dim);font-weight:600}
+.tab.is-on{background:var(--bg2);color:var(--txt);box-shadow:0 1px 3px #0006}
+
+/* ---------- Pads ---------- */
+.pad{display:flex;flex-direction:column;gap:8px}
+
+.mult-row{display:flex;gap:8px}
+.mult{
+  flex:1;padding:13px 0;border-radius:11px;font-weight:700;font-size:15px;
+  background:var(--bg2);border:1px solid var(--line);color:var(--dim);
+}
+.mult.is-on{background:var(--red);border-color:var(--red);color:#fff}
+.mult[data-m="1"].is-on{background:var(--green-d);border-color:var(--green);color:#fff}
+
+.numgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+
+.key{
+  background:var(--card);border:1px solid var(--line);border-radius:11px;
+  padding:14px 0;font-size:18px;font-weight:700;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.key:active{background:var(--green-d);border-color:var(--green)}
+
+.special-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.special{font-size:14px;font-weight:600;padding:13px 0;color:var(--dim)}
+
+/* ---------- Lump sum ---------- */
+.lumpview{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px;text-align:center;
+}
+.lumpview span{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keypad .key{padding:18px 0;font-size:22px}
+
+/* ---------- Actions ---------- */
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.msg{
+  text-align:center;font-size:14px;font-weight:600;color:var(--gold);
+  min-height:20px;
+}
+
+/* ---------- Win overlay ---------- */
+.overlay{
+  position:fixed;inset:0;background:#0b0e12ee;
+  display:flex;align-items:center;justify-content:center;padding:24px;z-index:10;
+}
+.win-card{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:28px 22px;text-align:center;width:100%;max-width:360px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.trophy{font-size:52px}
+.win-card h2{font-size:26px;color:var(--gold)}
+.win-card p{color:var(--dim);font-size:14px}
+
+@media (max-height:620px){
+  .pscore{font-size:34px}
+  .key{padding:11px 0;font-size:16px}
+  .keypad .key{padding:14px 0}
+  .brand{padding:8px 0 0}
+}
