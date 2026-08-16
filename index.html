@@ -20,11 +20,19 @@
   </header>
 
   <div class="card">
+    <span class="field-label">Mode</span>
+    <div class="preset-row" id="modeRow">
+      <button class="preset is-on" data-players="2">Two player</button>
+      <button class="preset" data-players="1">Practice</button>
+    </div>
+  </div>
+
+  <div class="card">
     <label class="field">
-      <span>Player 1</span>
+      <span id="label1">Player 1</span>
       <input id="name1" type="text" placeholder="Player 1" autocomplete="off" maxlength="14">
     </label>
-    <label class="field">
+    <label class="field" id="field2">
       <span>Player 2</span>
       <input id="name2" type="text" placeholder="Player 2" autocomplete="off" maxlength="14">
     </label>
@@ -44,6 +52,13 @@
   </div>
 
   <div class="card">
+    <button id="doubleIn" class="toggle" role="switch" aria-checked="false">
+      <span class="tg-label">
+        <b>Double in</b>
+        <small>Nothing scores until you hit a double to open.</small>
+      </span>
+      <span class="tg-switch"></span>
+    </button>
     <button id="doubleOut" class="toggle" role="switch" aria-checked="false">
       <span class="tg-label">
         <b>Double out</b>
@@ -60,9 +75,12 @@
 <!-- ============ GAME ============ -->
 <section id="game" class="screen hidden">
 
-  <div id="ruleBadge" class="rule-badge hidden">Double out</div>
+  <div id="badges" class="badges hidden">
+    <span id="bIn" class="badge hidden">Double in</span>
+    <span id="bOut" class="badge hidden">Double out</span>
+  </div>
 
-  <div class="scoreboard">
+  <div class="scoreboard" id="scoreboard">
     <button class="player" id="p0">
       <span class="pname"></span>
       <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>

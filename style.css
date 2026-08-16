@@ -100,12 +100,16 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .toggle.is-on .tg-switch{background:var(--green-d);border-color:var(--green)}
 .toggle.is-on .tg-switch::after{transform:translateX(20px);background:#fff}
 
-/* rule reminder on the game screen */
-.rule-badge{
-  align-self:center;font-size:11px;font-weight:700;letter-spacing:.6px;
+/* rule reminders on the game screen */
+.badges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.badge{
+  font-size:11px;font-weight:700;letter-spacing:.6px;
   text-transform:uppercase;color:var(--gold);
   border:1px solid #4a3c18;background:#241f11;
   padding:3px 10px;border-radius:999px;
+}
+.badge.alert{
+  color:#fff;background:var(--red);border-color:var(--red);
 }
 
 .primary{
@@ -123,6 +127,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 /* ---------- Scoreboard ---------- */
 .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scoreboard.solo{grid-template-columns:1fr}
+.scoreboard.solo .pscore{font-size:56px}
 
 .player{
   background:var(--card);
@@ -166,6 +172,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   font-size:16px;font-weight:700;color:var(--dim);
 }
 .slot.filled{border-style:solid;border-color:var(--green);color:var(--txt)}
+/* a dart thrown before the double-in landed — shown, but scores nothing */
+.slot.void{border-color:var(--line);color:var(--dim);text-decoration:line-through}
 .turntotal{
   text-align:center;min-width:64px;
   border-left:1px solid var(--line);padding-left:10px;

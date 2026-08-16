@@ -10,14 +10,16 @@ let msgTimer = null;
 
 /* ---------------- state ---------------- */
 
-function newGame(name1, name2, start, doubleOut) {
+function makePlayer(name, start, doubleIn) {
+  return { name, score: start, points: 0, turns: 0, opened: !doubleIn };
+}
+
+function newGame(names, start, rules) {
   return {
-    players: [
-      { name: name1, score: start, points: 0, turns: 0 },
-      { name: name2, score: start, points: 0, turns: 0 }
-    ],
+    players: names.map(n => makePlayer(n, start, rules.doubleIn)),
     start,
-    doubleOut: !!doubleOut,
+    doubleIn: !!rules.doubleIn,
+    doubleOut: !!rules.doubleOut,
     cur: 0,
     darts: [],       // {label, val}
     mode: 'darts',
@@ -51,36 +53,60 @@ function say(text, ms = 2600) {
 /* ---------------- setup screen ---------------- */
 
 function buildSetup() {
-  document.querySelectorAll('.preset').forEach(btn => {
+  const scorePresets = document.querySelectorAll('#presets .preset');
+  scorePresets.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.preset').forEach(b => b.classList.remove('is-on'));
+      scorePresets.forEach(b => b.classList.remove('is-on'));
       btn.classList.add('is-on');
       $('startScore').value = btn.dataset.score;
     });
   });
 
   $('startScore').addEventListener('input', () => {
-    document.querySelectorAll('.preset').forEach(b => {
+    scorePresets.forEach(b => {
       b.classList.toggle('is-on', b.dataset.score === $('startScore').value);
     });
   });
 
-  const dblBtn = $('doubleOut');
-  dblBtn.addEventListener('click', () => {
-    const on = !dblBtn.classList.contains('is-on');
-    dblBtn.classList.toggle('is-on', on);
-    dblBtn.setAttribute('aria-checked', String(on));
+  // two-player vs solo practice
+  let playerCount = 2;
+  const modeBtns = document.querySelectorAll('#modeRow .preset');
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('is-on'));
+      btn.classList.add('is-on');
+      playerCount = parseInt(btn.dataset.players, 10);
+      $('field2').classList.toggle('hidden', playerCount === 1);
+      $('label1').textContent = playerCount === 1 ? 'Name' : 'Player 1';
+      $('name1').placeholder = playerCount === 1 ? 'You' : 'Player 1';
+    });
+  });
+
+  const toggles = {};
+  ['doubleIn', 'doubleOut'].forEach(id => {
+    const btn = $(id);
+    toggles[id] = btn;
+    btn.addEventListener('click', () => {
+      const on = !btn.classList.contains('is-on');
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-checked', String(on));
+    });
   });
 
   $('startBtn').addEventListener('click', () => {
-    const n1 = $('name1').value.trim() || 'Player 1';
-    const n2 = $('name2').value.trim() || 'Player 2';
     const start = parseInt($('startScore').value, 10);
     if (!Number.isFinite(start) || start < 2) {
       $('startScore').focus();
       return;
     }
-    S = newGame(n1, n2, start, dblBtn.classList.contains('is-on'));
+    const names = playerCount === 1
+      ? [$('name1').value.trim() || 'You']
+      : [$('name1').value.trim() || 'Player 1', $('name2').value.trim() || 'Player 2'];
+
+    S = newGame(names, start, {
+      doubleIn: toggles.doubleIn.classList.contains('is-on'),
+      doubleOut: toggles.doubleOut.classList.contains('is-on')
+    });
     save();
     showGame();
   });
@@ -88,7 +114,7 @@ function buildSetup() {
   const saved = load();
   if (saved && !saved.over) {
     const btn = $('resumeBtn');
-    btn.textContent = `Resume: ${saved.players[0].name} vs ${saved.players[1].name}`;
+    btn.textContent = 'Resume: ' + saved.players.map(p => p.name).join(' vs ');
     btn.classList.remove('hidden');
     btn.addEventListener('click', () => {
       S = saved;
@@ -154,7 +180,8 @@ function buildBoard() {
   });
 
   $('rematchBtn').addEventListener('click', () => {
-    S = newGame(S.players[0].name, S.players[1].name, S.start, S.doubleOut);
+    S = newGame(S.players.map(p => p.name), S.start,
+                { doubleIn: S.doubleIn, doubleOut: S.doubleOut });
     save();
     $('winOverlay').classList.add('hidden');
     render();
@@ -165,7 +192,7 @@ function buildBoard() {
   // tapping a player card switches whose turn it is (fixes mis-taps)
   [0, 1].forEach(i => {
     $('p' + i).addEventListener('click', () => {
-      if (S.over || S.cur === i) return;
+      if (S.over || S.cur === i || S.players.length < 2) return;
       if (S.darts.length || S.lump) { say('Clear the current turn first'); return; }
       S.cur = i;
       render(); save();
@@ -233,10 +260,36 @@ function outcome(pts) {
   return { left, bust: false, win: left === 0, why: '' };
 }
 
+/* Splits the turn in progress into what actually scores and what doesn't.
+   Under double-in, darts thrown before the opening double are shown but
+   score nothing. `open` is the player's state once the turn is applied. */
+function breakdown() {
+  const p = S.players[S.cur];
+
+  if (S.mode === 'total') {
+    const raw = parseInt(S.lump, 10) || 0;
+    // no record of individual darts, so a scoring total is taken to have opened
+    return { pts: raw, counted: [], open: p.opened || raw > 0 };
+  }
+
+  let open = p.opened;
+  let pts = 0;
+  const counted = [];
+
+  for (const d of S.darts) {
+    if (!open) {
+      if (!d.dbl) { counted.push(false); continue; }  // still not in
+      open = true;
+    }
+    counted.push(true);
+    pts += d.val;
+  }
+
+  return { pts, counted, open };
+}
+
 function turnPoints() {
-  return S.mode === 'darts'
-    ? S.darts.reduce((a, d) => a + d.val, 0)
-    : (parseInt(S.lump, 10) || 0);
+  return breakdown().pts;
 }
 
 /* ---------------- turn resolution ---------------- */
@@ -244,17 +297,19 @@ function turnPoints() {
 function submitTurn() {
   if (S.over) return;
 
-  const pts = turnPoints();
+  const { pts, open } = breakdown();
   if (pts > 180) { say('Max 180 in three darts'); return; }
   if (S.mode === 'total' && S.lump === '') { say('Enter a score, or use the Darts pad'); return; }
 
   const p = S.players[S.cur];
   const before = p.score;
+  const wasOpen = p.opened;
   const { left, bust, win, why } = outcome(pts);
 
   S.log.push({
     player: S.cur,
     before,
+    wasOpen,
     pts,
     bust,
     darts: S.darts.slice(),
@@ -263,6 +318,7 @@ function submitTurn() {
   });
 
   p.turns += 1;
+  p.opened = open;              // a landed double opens you even if the turn busts
   if (!bust) {
     p.score = left;
     p.points += pts;
@@ -281,7 +337,10 @@ function submitTurn() {
   }
 
   if (bust) say(`Bust — ${why}. ${p.name} stays on ${before}`);
-  S.cur = 1 - S.cur;
+  else if (S.doubleIn && !wasOpen && open) say(`${p.name} is in`);
+  else if (S.doubleIn && !open) say(`${p.name} still needs a double to open`);
+
+  if (S.players.length > 1) S.cur = 1 - S.cur;
   render(); save();
 }
 
@@ -300,6 +359,7 @@ function undoTurn() {
   const p = S.players[last.player];
   p.score = last.before;
   p.turns -= 1;
+  if (last.wasOpen !== undefined) p.opened = last.wasOpen;
   if (!last.bust) p.points -= last.pts;
 
   S.cur = last.player;
@@ -312,9 +372,11 @@ function undoTurn() {
 }
 
 function showWin(p) {
+  const solo = S.players.length === 1;
   const avg = p.turns ? (p.points / p.turns).toFixed(1) : '0';
-  $('winName').textContent = `${p.name} wins!`;
-  $('winStats').textContent = `${p.turns} turns · ${avg} average`;
+  $('winName').textContent = solo ? `${p.name} checked out!` : `${p.name} wins!`;
+  $('winStats').textContent = `${S.start} down in ${p.turns} turns · ${avg} average`;
+  $('rematchBtn').textContent = solo ? 'Go again' : 'Rematch';
   $('winOverlay').classList.remove('hidden');
 }
 
@@ -323,10 +385,24 @@ function showWin(p) {
 function render() {
   if (!S) return;
 
-  const pts = turnPoints();
-  $('ruleBadge').classList.toggle('hidden', !S.doubleOut);
+  const { pts, counted } = breakdown();
+  const solo = S.players.length === 1;
+  const p0 = S.players[S.cur];
+
+  // rule badges; double-in turns red until the player has opened
+  $('badges').classList.toggle('hidden', !S.doubleIn && !S.doubleOut);
+  $('bIn').classList.toggle('hidden', !S.doubleIn);
+  $('bOut').classList.toggle('hidden', !S.doubleOut);
+  if (S.doubleIn) {
+    const needs = !p0.opened && !S.over;
+    $('bIn').classList.toggle('alert', needs);
+    $('bIn').textContent = needs ? `${p0.name} needs a double to open` : 'Double in';
+  }
 
   // scoreboard
+  $('scoreboard').classList.toggle('solo', solo);
+  $('p1').classList.toggle('hidden', solo);
+
   S.players.forEach((p, i) => {
     const el = $('p' + i);
     const isTurn = i === S.cur && !S.over;
@@ -360,7 +436,8 @@ function render() {
   for (let i = 0; i < MAX_DARTS; i++) {
     const d = S.darts[i];
     const el = document.createElement('div');
-    el.className = 'slot' + (d ? ' filled' : '');
+    // counted[i] === false means it landed before the double-in and scores nothing
+    el.className = 'slot' + (d ? (counted[i] === false ? ' filled void' : ' filled') : '');
     el.textContent = d ? d.label : '–';
     slots.appendChild(el);
   }
@@ -379,7 +456,6 @@ function render() {
   $('totalPad').classList.toggle('hidden', S.mode !== 'total');
 
   // submit button
-  const p = S.players[S.cur];
   const btn = $('submitBtn');
   const o = outcome(pts);
   if (S.over) {
@@ -389,7 +465,7 @@ function render() {
   } else if (o.win) {
     btn.textContent = `Submit ${pts} — checkout!`;
   } else {
-    btn.textContent = `Submit ${pts} for ${p.name}`;
+    btn.textContent = solo ? `Submit ${pts}` : `Submit ${pts} for ${p0.name}`;
   }
 }
 
