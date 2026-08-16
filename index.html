@@ -43,12 +43,24 @@
     </label>
   </div>
 
+  <div class="card">
+    <button id="doubleOut" class="toggle" role="switch" aria-checked="false">
+      <span class="tg-label">
+        <b>Double out</b>
+        <small>Winning dart must be a double. Leaving 1 is a bust.</small>
+      </span>
+      <span class="tg-switch"></span>
+    </button>
+  </div>
+
   <button id="startBtn" class="primary big">Start Game</button>
   <button id="resumeBtn" class="ghost hidden">Resume saved game</button>
 </section>
 
 <!-- ============ GAME ============ -->
 <section id="game" class="screen hidden">
+
+  <div id="ruleBadge" class="rule-badge hidden">Double out</div>
 
   <div class="scoreboard">
     <button class="player" id="p0">

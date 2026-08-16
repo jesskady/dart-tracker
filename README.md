@@ -10,7 +10,7 @@ Add it to your phone's home screen for a full-screen app feel.
 
 ## How it works
 
-**Setup** — enter both player names and pick a starting score (301 / 501 / 701, or type your own).
+**Setup** — enter both player names, pick a starting score (301 / 501 / 701, or type your own), and optionally switch on **Double out**.
 
 **Scoring** — each turn can be entered two ways:
 
@@ -23,7 +23,16 @@ Then hit **Submit turn** to subtract it and pass play to the other player.
 
 - Turn totals are capped at 180.
 - Going below zero is a **bust** — the score is left untouched and the turn passes.
-- Landing exactly on zero wins. (There's no double-out requirement.)
+- Landing exactly on zero wins.
+
+### Double out
+
+Off by default. When switched on in setup (a `DOUBLE OUT` badge then shows during the game), two extra rules apply:
+
+- The **winning dart must be a double** — `D1`–`D20`, or the double bull (`Bull` with `Double` selected, 50). Reaching zero any other way is a bust.
+- **Leaving exactly 1 is a bust**, since there's no double that finishes from there.
+
+One caveat: on the **Total** tab there's no record of which dart landed last, so a lump sum that reaches zero is taken at face value as a legal checkout. The "can't leave 1" and overshoot rules are still enforced. If you want the double verified, enter the finishing turn on the Darts tab.
 
 ## Other bits
 

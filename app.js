@@ -10,13 +10,14 @@ let msgTimer = null;
 
 /* ---------------- state ---------------- */
 
-function newGame(name1, name2, start) {
+function newGame(name1, name2, start, doubleOut) {
   return {
     players: [
       { name: name1, score: start, points: 0, turns: 0 },
       { name: name2, score: start, points: 0, turns: 0 }
     ],
     start,
+    doubleOut: !!doubleOut,
     cur: 0,
     darts: [],       // {label, val}
     mode: 'darts',
@@ -64,6 +65,13 @@ function buildSetup() {
     });
   });
 
+  const dblBtn = $('doubleOut');
+  dblBtn.addEventListener('click', () => {
+    const on = !dblBtn.classList.contains('is-on');
+    dblBtn.classList.toggle('is-on', on);
+    dblBtn.setAttribute('aria-checked', String(on));
+  });
+
   $('startBtn').addEventListener('click', () => {
     const n1 = $('name1').value.trim() || 'Player 1';
     const n2 = $('name2').value.trim() || 'Player 2';
@@ -72,7 +80,7 @@ function buildSetup() {
       $('startScore').focus();
       return;
     }
-    S = newGame(n1, n2, start);
+    S = newGame(n1, n2, start, dblBtn.classList.contains('is-on'));
     save();
     showGame();
   });
@@ -146,7 +154,7 @@ function buildBoard() {
   });
 
   $('rematchBtn').addEventListener('click', () => {
-    S = newGame(S.players[0].name, S.players[1].name, S.start);
+    S = newGame(S.players[0].name, S.players[1].name, S.start, S.doubleOut);
     save();
     $('winOverlay').classList.add('hidden');
     render();
@@ -185,7 +193,8 @@ function addDart(n, isBull = false) {
   const prefix = n === 0 ? '' : (m === 2 ? 'D' : m === 3 ? 'T' : '');
   const label = n === 0 ? 'miss' : prefix + n;
 
-  S.darts.push({ label, val });
+  // dbl is what the double-out rule checks on the winning dart
+  S.darts.push({ label, val, dbl: m === 2 && n > 0 });
   S.mult = 1;                       // multiplier applies to one dart only
   render(); save();
 }
@@ -202,6 +211,26 @@ function lumpKey(k) {
   else if (k === '⌫') S.lump = S.lump.slice(0, -1);
   else if (S.lump.length < 3) S.lump = (S.lump + k).replace(/^0+(?=\d)/, '');
   render(); save();
+}
+
+/* Where a turn of `pts` leaves the current player, and whether it's legal.
+   Shared by the live projection, the submit button and submitTurn itself. */
+function outcome(pts) {
+  const left = S.players[S.cur].score - pts;
+
+  if (left < 0) return { left, bust: true, win: false, why: 'overshot' };
+
+  if (S.doubleOut) {
+    if (left === 1) return { left, bust: true, win: false, why: 'left 1' };
+    if (left === 0 && S.mode === 'darts') {
+      const last = S.darts[S.darts.length - 1];
+      if (!last || !last.dbl) {
+        return { left, bust: true, win: false, why: 'no double to finish' };
+      }
+    }
+  }
+
+  return { left, bust: false, win: left === 0, why: '' };
 }
 
 function turnPoints() {
@@ -221,8 +250,7 @@ function submitTurn() {
 
   const p = S.players[S.cur];
   const before = p.score;
-  const after = before - pts;
-  const bust = after < 0;
+  const { left, bust, win, why } = outcome(pts);
 
   S.log.push({
     player: S.cur,
@@ -236,7 +264,7 @@ function submitTurn() {
 
   p.turns += 1;
   if (!bust) {
-    p.score = after;
+    p.score = left;
     p.points += pts;
   }
 
@@ -244,7 +272,7 @@ function submitTurn() {
   S.lump = '';
   S.mult = 1;
 
-  if (!bust && after === 0) {
+  if (win) {
     S.over = true;
     S.winner = S.cur;
     render(); save();
@@ -252,7 +280,7 @@ function submitTurn() {
     return;
   }
 
-  if (bust) say(`Bust! ${p.name} stays on ${before}`);
+  if (bust) say(`Bust — ${why}. ${p.name} stays on ${before}`);
   S.cur = 1 - S.cur;
   render(); save();
 }
@@ -296,6 +324,7 @@ function render() {
   if (!S) return;
 
   const pts = turnPoints();
+  $('ruleBadge').classList.toggle('hidden', !S.doubleOut);
 
   // scoreboard
   S.players.forEach((p, i) => {
@@ -310,13 +339,13 @@ function render() {
     el.classList.toggle('pending', isTurn && pts > 0);
     pend.classList.remove('bust', 'checkout');
     if (isTurn && pts > 0) {
-      const left = p.score - pts;
-      if (left < 0) {
+      const o = outcome(pts);
+      if (o.bust) {
         pend.textContent = '→ bust';
         pend.classList.add('bust');
       } else {
-        pend.textContent = '→ ' + left;
-        if (left === 0) pend.classList.add('checkout');
+        pend.textContent = '→ ' + o.left;
+        if (o.win) pend.classList.add('checkout');
       }
     }
 
@@ -352,11 +381,12 @@ function render() {
   // submit button
   const p = S.players[S.cur];
   const btn = $('submitBtn');
+  const o = outcome(pts);
   if (S.over) {
     btn.textContent = 'Game over';
-  } else if (pts > p.score) {
+  } else if (pts > 0 && o.bust) {
     btn.textContent = `Submit ${pts} — bust`;
-  } else if (pts === p.score && pts > 0) {
+  } else if (o.win) {
     btn.textContent = `Submit ${pts} — checkout!`;
   } else {
     btn.textContent = `Submit ${pts} for ${p.name}`;
