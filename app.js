@@ -70,7 +70,7 @@ function buildSetup() {
 
   // two-player vs solo practice
   let playerCount = 2;
-  const modeBtns = document.querySelectorAll('#modeRow .preset');
+  const modeBtns = document.querySelectorAll('#modeRow .seg');
   modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       modeBtns.forEach(b => b.classList.remove('is-on'));

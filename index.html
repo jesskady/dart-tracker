@@ -8,7 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Dart Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23182029'/><circle cx='16' cy='16' r='11' fill='%232e7d4f'/><circle cx='16' cy='16' r='7' fill='%23182029'/><circle cx='16' cy='16' r='3.5' fill='%23c0392b'/></svg>">
-<link rel="stylesheet" href="style.css">
+<!-- ?v= must be bumped whenever style.css or app.js changes. GitHub Pages
+     caches each file for 10 minutes independently, so without this a new
+     index.html can load against a stale app.js and misbehave. -->
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -21,9 +24,11 @@
 
   <div class="card">
     <span class="field-label">Mode</span>
+    <!-- class is deliberately NOT .preset: the score presets below are swept
+         by class, and these must never be caught by that -->
     <div class="preset-row" id="modeRow">
-      <button class="preset is-on" data-players="2">Two player</button>
-      <button class="preset" data-players="1">Practice</button>
+      <button class="seg is-on" data-players="2">Two player</button>
+      <button class="seg" data-players="1">Practice</button>
     </div>
   </div>
 
@@ -146,6 +151,6 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

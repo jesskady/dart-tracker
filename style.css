@@ -75,12 +75,13 @@ input[type=number]{-moz-appearance:textfield}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
 .preset-row{display:flex;gap:8px}
-.preset{
+.preset,.seg{
   flex:1;padding:12px 0;border-radius:10px;
   background:var(--bg2);border:1px solid var(--line);
   font-weight:600;font-size:17px;
 }
-.preset.is-on{background:var(--green-d);border-color:var(--green);color:#fff}
+.seg{font-size:15px}
+.preset.is-on,.seg.is-on{background:var(--green-d);border-color:var(--green);color:#fff}
 
 /* switch row */
 .toggle{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:2px}
