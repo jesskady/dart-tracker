@@ -32,26 +32,26 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;tou
 .screen{
   max-width:520px;
   margin:0 auto;
-  padding:16px 14px calc(16px + var(--pad));
+  padding:10px 10px calc(10px + var(--pad));
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:8px;
   min-height:100%;
 }
 
 /* ---------- Setup ---------- */
-.brand{text-align:center;padding:18px 0 6px}
-.brand h1{font-size:30px;letter-spacing:-.5px}
-.brand p{color:var(--dim);font-size:14px;margin-top:4px}
+.brand{text-align:center;padding:8px 0 2px}
+.brand h1{font-size:26px;letter-spacing:-.5px}
+.brand p{color:var(--dim);font-size:13px;margin-top:2px}
 
 .card{
   background:var(--card);
   border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px;
+  border-radius:12px;
+  padding:11px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:9px;
 }
 
 .field{display:flex;align-items:center;gap:12px}
@@ -104,10 +104,10 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 /* rule reminders on the game screen */
 .badges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .badge{
-  font-size:11px;font-weight:700;letter-spacing:.6px;
+  font-size:10px;font-weight:700;letter-spacing:.6px;
   text-transform:uppercase;color:var(--gold);
   border:1px solid #4a3c18;background:#241f11;
-  padding:3px 10px;border-radius:999px;
+  padding:2px 9px;border-radius:999px;
 }
 .badge.alert{
   color:#fff;background:var(--red);border-color:var(--red);
@@ -118,7 +118,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   font-weight:700;letter-spacing:.2px;
 }
 .primary:active{background:var(--green-d)}
-.big{padding:17px;font-size:18px;width:100%}
+.big{padding:13px;font-size:17px;width:100%}
 
 .danger{
   background:var(--red);color:#fff;border-radius:14px;
@@ -128,71 +128,71 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 .ghost{
   color:var(--dim);border:1px solid var(--line);
-  border-radius:12px;padding:11px;width:100%;font-size:15px;
+  border-radius:11px;padding:9px;width:100%;font-size:14px;
 }
 .ghost:active{background:var(--card)}
 
 /* ---------- Scoreboard ---------- */
-.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .scoreboard.solo{grid-template-columns:1fr}
-.scoreboard.solo .pscore{font-size:56px}
+.scoreboard.solo .pscore{font-size:42px}
 
 .player{
   background:var(--card);
   border:2px solid var(--line);
-  border-radius:14px;
-  padding:12px 8px 10px;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border-radius:12px;
+  padding:5px 6px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:0;
   transition:border-color .15s,background .15s;
 }
 .player.active{border-color:var(--green);background:#1c2b23}
 .pname{
-  font-size:14px;color:var(--dim);font-weight:600;
+  font-size:12px;color:var(--dim);font-weight:600;line-height:1.25;
   max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .player.active .pname{color:var(--green)}
 .pscore{
   display:flex;align-items:baseline;justify-content:center;gap:5px;
-  font-size:44px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;
+  font-size:34px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;
 }
 /* projected score for the turn in progress */
 .ppend{
-  display:none;font-style:normal;font-size:20px;font-weight:700;
+  display:none;font-style:normal;font-size:17px;font-weight:700;
   color:var(--gold);white-space:nowrap;
 }
 .player.pending .ppend{display:inline}
-.ppend.bust{color:var(--red);font-size:15px}
+.ppend.bust{color:var(--red);font-size:13px}
 .ppend.checkout{color:var(--green)}
 
-.pmeta{font-size:11px;color:var(--dim);min-height:14px}
+.pmeta{font-size:10px;color:var(--dim);min-height:12px;line-height:1.2}
 
 /* ---------- Turn bar ---------- */
 .turnbar{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:8px;
   background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:10px;
+  border-radius:12px;padding:6px;
 }
-.darts{display:flex;gap:6px;flex:1}
+.darts{display:flex;gap:5px;flex:1}
 .slot{
-  flex:1;text-align:center;padding:9px 2px;
-  background:var(--bg2);border:1px dashed var(--line);border-radius:10px;
-  font-size:16px;font-weight:700;color:var(--dim);
+  flex:1;text-align:center;padding:6px 2px;
+  background:var(--bg2);border:1px dashed var(--line);border-radius:9px;
+  font-size:15px;font-weight:700;color:var(--dim);
 }
 .slot.filled{border-style:solid;border-color:var(--green);color:var(--txt)}
 /* a dart thrown before the double-in landed — shown, but scores nothing */
 .slot.void{border-color:var(--line);color:var(--dim);text-decoration:line-through}
 .turntotal{
-  text-align:center;min-width:64px;
-  border-left:1px solid var(--line);padding-left:10px;
+  text-align:center;min-width:56px;
+  border-left:1px solid var(--line);padding-left:8px;
 }
-.turntotal span{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
-.turntotal small{color:var(--dim);font-size:10px}
+.turntotal span{display:block;font-size:20px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.turntotal small{color:var(--dim);font-size:9px}
 
 /* ---------- Checkout suggestion ---------- */
 .checkout{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  min-height:44px;padding:6px 10px;
-  border:1px solid var(--line);border-radius:12px;background:var(--card);
+  min-height:34px;padding:4px 8px;
+  border:1px solid var(--line);border-radius:11px;background:var(--card);
 }
 .co-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--dim)}
 .co-darts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -205,35 +205,38 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .checkout.empty{opacity:.35}
 
 /* ---------- Pads ---------- */
-.pad{display:flex;flex-direction:column;gap:8px}
+.pad{display:flex;flex-direction:column;gap:6px}
 
-.mult-row{display:flex;gap:8px}
+/* multiplier column + number grid, side by side */
+.entry{display:flex;gap:6px;align-items:stretch}
+.mult-col{display:flex;flex-direction:column;gap:6px;flex:0 0 76px}
 .mult{
-  flex:1;padding:13px 0;border-radius:11px;font-weight:700;font-size:15px;
+  flex:1;padding:0;border-radius:11px;font-weight:700;font-size:13px;
   background:var(--bg2);border:1px solid var(--line);color:var(--dim);
 }
 .mult.is-on{background:var(--red);border-color:var(--red);color:#fff}
 .mult[data-m="1"].is-on{background:var(--green-d);border-color:var(--green);color:#fff}
 
-.numgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.numgrid{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 
 .key{
   background:var(--card);border:1px solid var(--line);border-radius:11px;
-  padding:14px 0;font-size:18px;font-weight:700;text-align:center;
+  padding:11px 0;font-size:17px;font-weight:700;text-align:center;
   font-variant-numeric:tabular-nums;
 }
 .key:active{background:var(--green-d);border-color:var(--green)}
 
 .special-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.special{font-size:14px;font-weight:600;padding:13px 0;color:var(--dim)}
+/* Bull is a real scoring key, so keep this row close to a 44px target */
+.special{font-size:13px;font-weight:600;padding:11px 0;color:var(--dim)}
 
 /* ---------- Actions ---------- */
-.actions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
-.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:2px}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 
 .msg{
-  text-align:center;font-size:14px;font-weight:600;color:var(--gold);
-  min-height:20px;
+  text-align:center;font-size:13px;font-weight:600;color:var(--gold);
+  min-height:16px;line-height:1.2;
 }
 
 /* ---------- Win overlay ---------- */
@@ -255,9 +258,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .overlay.confirm h2{color:var(--txt);font-size:22px}
 .overlay.confirm p{font-size:15px;line-height:1.45}
 
-@media (max-height:620px){
-  .pscore{font-size:34px}
-  .key{padding:11px 0;font-size:16px}
-  .checkout{min-height:38px}
-  .brand{padding:8px 0 0}
+/* very short viewports: give up a little more */
+@media (max-height:600px){
+  .pscore{font-size:28px}
+  .scoreboard.solo .pscore{font-size:34px}
+  .key{padding:8px 0;font-size:16px}
+  .checkout{min-height:30px}
+  .big{padding:11px;font-size:16px}
+  .brand{padding:2px 0 0}
 }

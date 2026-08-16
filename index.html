@@ -11,7 +11,7 @@
 <!-- ?v= must be bumped whenever style.css or app.js changes. GitHub Pages
      caches each file for 10 minutes independently, so without this a new
      index.html can load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -107,12 +107,16 @@
 
   <!-- Darts entry -->
   <div id="dartsPad" class="pad">
-    <div class="mult-row" id="mults">
-      <button class="mult is-on" data-m="1">Single</button>
-      <button class="mult" data-m="2">Double</button>
-      <button class="mult" data-m="3">Triple</button>
+    <!-- multipliers sit beside the grid, not above it: a full-width row of
+         them costs vertical space the submit button needs -->
+    <div class="entry">
+      <div class="mult-col" id="mults">
+        <button class="mult is-on" data-m="1">Single</button>
+        <button class="mult" data-m="2">Double</button>
+        <button class="mult" data-m="3">Triple</button>
+      </div>
+      <div class="numgrid" id="numgrid"></div>
     </div>
-    <div class="numgrid" id="numgrid"></div>
     <div class="special-row">
       <button class="key special" data-bull="25">Bull 25</button>
       <button class="key special" data-miss="1">Miss</button>
@@ -152,6 +156,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
