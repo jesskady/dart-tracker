@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#12161c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Darts · Score Chalk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23182029'/><circle cx='16' cy='16' r='11' fill='%232e7d4f'/><circle cx='16' cy='16' r='7' fill='%23182029'/><circle cx='16' cy='16' r='3.5' fill='%23c0392b'/></svg>">
+<!-- ?v= must be bumped whenever a stylesheet or app.js changes. Each file is
+     cached independently at the edge, so without this a new index.html can
+     load against a stale app.js and misbehave. -->
+<link rel="stylesheet" href="../shared.css?v=14">
+<link rel="stylesheet" href="style.css?v=14">
+</head>
+<body>
+
+<!-- ============ SETUP ============ -->
+<section id="setup" class="screen">
+  <!-- only on setup: mid-game this would sit next to the scoring pad, one
+       mis-tap away from abandoning a leg -->
+  <a class="backlink" href="/">‹ All games</a>
+
+  <header class="brand">
+    <h1>Darts</h1>
+    <p>Two-player countdown scoring</p>
+  </header>
+
+  <div class="card">
+    <span class="field-label">Mode</span>
+    <!-- class is deliberately NOT .preset: the score presets below are swept
+         by class, and these must never be caught by that -->
+    <div class="preset-row" id="modeRow">
+      <button class="seg is-on" data-players="2">Two player</button>
+      <button class="seg" data-players="1">Practice</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field">
+      <span id="label1">Player 1</span>
+      <input id="name1" type="text" placeholder="Player 1" autocomplete="off" maxlength="14">
+    </label>
+    <label class="field" id="field2">
+      <span>Player 2</span>
+      <input id="name2" type="text" placeholder="Player 2" autocomplete="off" maxlength="14">
+    </label>
+  </div>
+
+  <div class="card">
+    <span class="field-label">Starting score</span>
+    <div class="preset-row" id="presets">
+      <button class="preset" data-score="301">301</button>
+      <button class="preset is-on" data-score="501">501</button>
+      <button class="preset" data-score="701">701</button>
+    </div>
+    <label class="field">
+      <span>Custom</span>
+      <input id="startScore" type="number" inputmode="numeric" value="501" min="2" max="9999">
+    </label>
+  </div>
+
+  <div class="card">
+    <button id="doubleIn" class="toggle" role="switch" aria-checked="false">
+      <span class="tg-label">
+        <b>Double in</b>
+        <small>Nothing scores until you hit a double to open.</small>
+      </span>
+      <span class="tg-switch"></span>
+    </button>
+    <button id="doubleOut" class="toggle" role="switch" aria-checked="false">
+      <span class="tg-label">
+        <b>Double out</b>
+        <small>Winning dart must be a double. Leaving 1 is a bust.</small>
+      </span>
+      <span class="tg-switch"></span>
+    </button>
+  </div>
+
+  <button id="startBtn" class="primary big">Start Game</button>
+  <button id="resumeBtn" class="ghost hidden">Resume saved game</button>
+</section>
+
+<!-- ============ GAME ============ -->
+<section id="game" class="screen hidden">
+
+  <header class="brand compact">
+    <h1>Darts</h1>
+  </header>
+
+  <div id="badges" class="badges hidden">
+    <span id="bIn" class="badge hidden">Double in</span>
+    <span id="bOut" class="badge hidden">Double out</span>
+  </div>
+
+  <div class="scoreboard" id="scoreboard">
+    <button class="player" id="p0">
+      <span class="pname"></span>
+      <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>
+      <span class="pmeta"></span>
+    </button>
+    <button class="player" id="p1">
+      <span class="pname"></span>
+      <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>
+      <span class="pmeta"></span>
+    </button>
+  </div>
+
+  <div class="turnbar">
+    <div class="darts" id="dartSlots"></div>
+    <div class="turntotal"><span id="turnTotal">0</span><small>this turn</small></div>
+  </div>
+
+  <div id="checkout" class="checkout"></div>
+
+  <!-- Darts entry -->
+  <div id="dartsPad" class="pad">
+    <!-- multipliers sit beside the grid, not above it: a full-width row of
+         them costs vertical space the submit button needs -->
+    <div class="entry">
+      <div class="mult-col" id="mults">
+        <button class="mult is-on" data-m="1">Single</button>
+        <button class="mult" data-m="2">Double</button>
+        <button class="mult" data-m="3">Triple</button>
+      </div>
+      <div class="numgrid" id="numgrid"></div>
+    </div>
+    <div class="special-row">
+      <button class="key special" data-bull="25">Bull 25</button>
+      <button class="key special" data-miss="1">Miss</button>
+      <button class="key special" id="undoDart">Undo dart</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="submitBtn" class="primary big">Submit turn</button>
+    <div class="mini-row">
+      <button id="undoTurn" class="ghost">Undo turn</button>
+      <button id="bustBtn" class="ghost bust-btn">Bust</button>
+      <button id="quitBtn" class="ghost">New game</button>
+    </div>
+  </div>
+
+  <p id="msg" class="msg"></p>
+</section>
+
+<!-- ============ CONFIRM ============ -->
+<div id="confirmOverlay" class="overlay confirm hidden">
+  <div class="win-card">
+    <h2>Are you sure?</h2>
+    <p id="confirmText"></p>
+    <button id="confirmYes" class="danger big">Yes</button>
+    <button id="confirmNo" class="ghost">Cancel</button>
+  </div>
+</div>
+
+<!-- ============ WIN ============ -->
+<div id="winOverlay" class="overlay hidden">
+  <div class="win-card">
+    <div class="trophy">🎯</div>
+    <h2 id="winName"></h2>
+    <p id="winStats"></p>
+    <button id="rematchBtn" class="primary big">Rematch</button>
+    <button id="newBtn" class="ghost">New setup</button>
+  </div>
+</div>
+
+<script src="app.js?v=14"></script>
+</body>
+</html>

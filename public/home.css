@@ -1,0 +1,57 @@
+/* The game chooser. Only this page uses these rules — anything a game needs
+   too belongs in shared.css instead. */
+
+.screen{
+  max-width:520px;
+  margin:0 auto;
+  padding:10px 10px calc(10px + var(--pad));
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:100%;
+}
+
+/* the chooser is short, so it sits nearer the middle than the top */
+.home{justify-content:center;gap:14px;padding-bottom:calc(40px + var(--pad))}
+
+.brand{text-align:center;padding:8px 0 2px}
+.brand h1{font-size:30px;letter-spacing:-.5px}
+.brand p{color:var(--dim);font-size:14px;margin-top:4px}
+
+.pick{
+  text-align:center;font-size:11px;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;color:var(--dim);margin-top:10px;
+}
+
+.games{display:flex;flex-direction:column;gap:10px}
+
+.game{
+  display:flex;align-items:center;gap:14px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px 14px;text-decoration:none;color:inherit;
+  transition:border-color .15s,background .15s;
+}
+.game:active{background:#1c2b23;border-color:var(--green)}
+
+.game-icon{font-size:30px;line-height:1;flex:none}
+
+.game-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.game-text b{font-size:19px;font-weight:700;letter-spacing:-.2px}
+.game-text small{color:var(--dim);font-size:12.5px;line-height:1.4}
+
+.game-go{flex:none;color:var(--dim);display:flex;align-items:center}
+.game-go svg{display:block}
+.game:active .game-go{color:var(--green)}
+
+.soon{
+  text-align:center;font-size:12px;color:var(--dim);
+  opacity:.65;padding:8px 0 0;
+}
+
+/* short viewports: the same trims the game screens make */
+@media (max-height:600px){
+  .home{gap:10px}
+  .brand h1{font-size:25px}
+  .game{padding:13px 12px}
+  .game-icon{font-size:26px}
+}

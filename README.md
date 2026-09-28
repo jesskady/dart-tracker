@@ -1,6 +1,8 @@
 # 🎯 Score Chalk
 
-A tiny, mobile-first score tracker for countdown darts (501, 301, or any starting score you like) — head to head, or solo for practice. No build step, no dependencies — three static files.
+Mobile-first scorekeeping for the games I play. The home page is a chooser; each game is a self-contained page under it. No build step, no dependencies, no framework — just static files.
+
+**Darts** is the first one: countdown scoring (501, 301, or any starting score you like), head to head or solo for practice.
 
 ## Use it
 
@@ -63,9 +65,27 @@ Because every turn is entered dart by dart, both rules are checked against the a
 
 ## Layout
 
-The site is the three files in `public/`. That directory is what gets
-published and nothing outside it is, so `wrangler.jsonc` and this README stay
-unpublished by virtue of living above it.
+```
+public/
+  index.html      game chooser
+  home.css        chooser styles
+  shared.css      palette + reset, used by every page
+  darts/
+    index.html
+    app.js
+    style.css
+worker/
+  index.js        www -> apex redirect, nothing else
+```
+
+`public/` is what gets published and nothing outside it is, so
+`wrangler.jsonc`, `worker/` and this README stay unpublished by virtue of
+living above it.
+
+**Adding a game** means adding a folder under `public/` and one `<a>` to the
+chooser. Games share `shared.css` — the palette and the reset — and nothing
+else, so one game's layout can never break another's. Keep game-specific rules
+in that game's own stylesheet.
 
 ## Running locally
 

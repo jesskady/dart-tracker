@@ -1,0 +1,34 @@
+/* Shared by every game on Score Chalk: the palette, the reset, and the two
+   base rules each page needs. Anything specific to one game belongs in that
+   game's own stylesheet, not here. */
+
+:root{
+  --bg:#12161c;
+  --bg2:#182029;
+  --card:#1e2732;
+  --line:#2b3743;
+  --txt:#e8eef5;
+  --dim:#8ea0b3;
+  --green:#2e9e63;
+  --green-d:#247a4d;
+  --red:#c0392b;
+  --gold:#e0b341;
+  --pad: env(safe-area-inset-bottom, 0px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{height:100%}
+
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  overscroll-behavior:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;touch-action:manipulation}
+
+.hidden{display:none !important}
