@@ -288,3 +288,16 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 /* unfinished games offered from the profile, under the local resume */
 .cloud-resume{display:flex;flex-direction:column;gap:6px}
 .cloud-resume:empty{display:none}
+
+/* Game screen header: the way out on the left, the title centred, and room
+   kept on the right for the fixed account bubble. Grid rather than flex so
+   the title stays centred on the screen regardless of the link's width. */
+/* The empty third column balances the link, so the title stays centred on the
+   scoreboard below rather than on the space left over beside the link. The
+   fixed account bubble sits over that empty column, which is why it is
+   empty. */
+.brand.compact.gamebar{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;
+}
+.brand.compact.gamebar .backlink{justify-self:start;padding:2px}
+.brand.compact.gamebar h1{grid-column:2}

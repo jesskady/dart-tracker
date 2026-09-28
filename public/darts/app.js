@@ -116,12 +116,26 @@ function buildSetup() {
     });
   });
 
-  $('startBtn').addEventListener('click', () => {
+  $('startBtn').addEventListener('click', async () => {
     const start = parseInt($('startScore').value, 10);
     if (!Number.isFinite(start) || start < 2) {
       $('startScore').focus();
       return;
     }
+
+    // Only one game is held locally, so starting a new one replaces whatever
+    // is there. That used to require pressing New game, which asks first —
+    // now that the game screen has a way out, this is reachable without it.
+    const open = load();
+    if (open && !open.over) {
+      const who = open.players.map(p => p.name).join(' vs ');
+      const ok = await askConfirm(
+        `Your game in progress — ${who} — will be replaced on this device.`,
+        'Start new game'
+      );
+      if (!ok) return;
+    }
+
     const names = playerCount === 1
       ? [$('name1').value.trim() || 'You']
       : [$('name1').value.trim() || 'Player 1', $('name2').value.trim() || 'Player 2'];

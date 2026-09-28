@@ -11,16 +11,14 @@
 <!-- ?v= must be bumped whenever a stylesheet or app.js changes. Each file is
      cached independently at the edge, so without this a new index.html can
      load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="../shared.css?v=17">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="../shared.css?v=18">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 
 <!-- ============ SETUP ============ -->
 <section id="setup" class="screen">
-  <!-- only on setup: mid-game this would sit next to the scoring pad, one
-       mis-tap away from abandoning a leg -->
-  <a class="backlink" href="/">‹ All games</a>
+  <a class="backlink" href="/">&lsaquo; All games</a>
 
   <header class="brand">
     <h1>Darts</h1>
@@ -87,7 +85,10 @@
 <!-- ============ GAME ============ -->
 <section id="game" class="screen hidden">
 
-  <header class="brand compact">
+  <!-- Leaving mid-game is safe: the game stays in localStorage and is offered
+       back as Resume, and Save puts it on the profile for other devices. -->
+  <header class="brand compact gamebar">
+    <a class="backlink" href="/">&lsaquo; All games</a>
     <h1>Darts</h1>
   </header>
 
@@ -171,8 +172,8 @@
   </div>
 </div>
 
-<script src="/account.js?v=17" defer></script>
-<script src="sync.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="/account.js?v=18" defer></script>
+<script src="sync.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
