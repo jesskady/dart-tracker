@@ -46,6 +46,36 @@
     );
   }
 
+  const fmtDate = (ms) =>
+    new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  function gameRow(g) {
+    const row = el('li', 'game-row');
+
+    const names = (g.players || []).map((p) => p.name);
+    const won = g.winner_idx != null ? names[g.winner_idx] : null;
+
+    const main = el('div', 'game-main');
+    main.append(el('b', null, names.join(' vs ') || 'Game'));
+
+    const bits = [];
+    if (g.config && g.config.start) bits.push(String(g.config.start));
+    if (g.config && g.config.doubleIn) bits.push('double in');
+    if (g.config && g.config.doubleOut) bits.push('double out');
+    bits.push(g.turn_count === 1 ? '1 turn' : `${g.turn_count} turns`);
+    main.append(el('small', null, bits.join(' · ')));
+
+    const side = el('div', 'game-side');
+    // an unfinished game is the useful thing to spot in this list, so it is
+    // the one that gets a badge rather than the finished ones
+    side.append(el('span', g.ended_at ? 'game-tag' : 'game-tag live',
+      g.ended_at ? (won ? `${won} won` : 'Finished') : 'In progress'));
+    side.append(el('small', null, fmtDate(g.ended_at || g.updated_at || g.started_at)));
+
+    row.append(main, side);
+    return row;
+  }
+
   function showProfile(user) {
     const head = el('div', 'prof-head');
     const id = el('div', 'prof-id');
@@ -53,12 +83,23 @@
     if (user.email) id.append(el('small', null, user.email));
     head.append(avatar(user), id);
 
-    // Nothing writes game history yet, so this says so plainly rather than
-    // showing an empty table that looks broken.
-    const history = el('p', 'prof-empty',
-      'No games recorded yet. Finished games will appear here once history syncing is switched on.');
+    const loading = el('p', 'prof-empty', 'Loading your games…');
+    box.replaceChildren(head, card('Your games', loading));
 
-    box.replaceChildren(head, card('Your games', history));
+    fetch('/api/games?limit=50', { headers: { accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const games = (data && data.games) || [];
+        if (!games.length) {
+          loading.textContent =
+            'No games yet. Finish a game, or hit Save mid-game, and it will show up here.';
+          return;
+        }
+        const list = el('ul', 'game-list');
+        games.forEach((g) => list.append(gameRow(g)));
+        loading.replaceWith(list);
+      })
+      .catch(() => { loading.textContent = 'Could not load your games.'; });
   }
 
   fetch('/api/me', { headers: { accept: 'application/json' } })

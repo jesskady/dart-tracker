@@ -16,6 +16,10 @@ function makePlayer(name, start, doubleIn) {
 
 function newGame(names, start, rules) {
   return {
+    // Chosen here, not by the server, so saving the same game twice updates
+    // one row instead of creating two.
+    id: crypto.randomUUID(),
+    startedAt: Date.now(),
     players: names.map(n => makePlayer(n, start, rules.doubleIn)),
     start,
     doubleIn: !!rules.doubleIn,
@@ -137,8 +141,81 @@ function buildSetup() {
     btn.classList.remove('hidden');
     btn.addEventListener('click', () => {
       S = saved;
+      // a game saved before ids existed still needs one to sync
+      if (!S.id) { S.id = crypto.randomUUID(); S.startedAt = S.startedAt || Date.now(); }
       showGame();
     });
+  }
+
+  buildCloudResume(saved);
+}
+
+/* The Save button keeps an unfinished game on the profile so it can be picked
+   up later, or on another device. It only appears when there is a profile to
+   save to, which also keeps the row at three buttons for anyone playing
+   signed out. */
+async function buildSaveButton() {
+  const btn = $('saveBtn');
+  if (!btn || !window.SCSync) return;
+
+  const who = await window.SCSync.me();
+  if (!who || !who.user) return;
+
+  btn.classList.remove('hidden');
+  $('miniRow').classList.add('has-save');
+
+  btn.addEventListener('click', async () => {
+    if (!S) return;
+    btn.disabled = true;
+    const was = btn.textContent;
+    btn.textContent = 'Saving…';
+    try {
+      await window.SCSync.saveNow(S);
+      btn.textContent = 'Saved';
+      say('Saved to your profile');
+      setTimeout(() => { btn.textContent = was; btn.disabled = false; }, 1600);
+    } catch (e) {
+      // the user asked for this, so a failure has to be visible
+      btn.textContent = was;
+      btn.disabled = false;
+      say('Could not save — check your connection');
+    }
+  });
+}
+
+/* Unfinished games saved to the profile. Offered alongside the local resume
+   rather than instead of it: if both exist they are usually different games,
+   and picking one silently is how someone loses a leg. */
+async function buildCloudResume(localSaved) {
+  const box = $('cloudResume');
+  if (!box || !window.SCSync) return;
+
+  const who = await window.SCSync.me();
+  if (!who || !who.user) return;
+
+  let games = [];
+  try { games = await window.SCSync.unfinished(); } catch (e) { return; }
+
+  // the one already open on this device is not worth offering twice
+  games = games.filter(g => !localSaved || g.id !== localSaved.id);
+  if (!games.length) return;
+
+  for (const g of games) {
+    const btn = document.createElement('button');
+    btn.className = 'ghost';
+    btn.textContent = 'Resume from profile: ' + g.players.map(p => p.name).join(' vs ');
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        S = await window.SCSync.load(g.id);
+        save();
+        showGame();
+      } catch (e) {
+        btn.disabled = false;
+        say('Could not load that game');
+      }
+    });
+    box.appendChild(btn);
   }
 }
 
@@ -166,6 +243,7 @@ function buildBoard() {
   document.querySelector('[data-bull]').addEventListener('click', () => addDart(25, true));
   document.querySelector('[data-miss]').addEventListener('click', () => addDart(0));
   $('undoDart').addEventListener('click', undoDart);
+  buildSaveButton();
 
   // the checkout box is rebuilt on every render, so its arrows are delegated
   $('checkout').addEventListener('click', e => {
@@ -488,6 +566,8 @@ function submitTurn() {
     S.winner = S.cur;
     render(); save();
     showWin(p);
+    // fire and forget: the win is already safe locally
+    if (window.SCSync) window.SCSync.onGameOver(S);
     return;
   }
 

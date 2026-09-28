@@ -79,11 +79,14 @@ public/
     index.html
     app.js
     style.css
+    sync.js       saving games to a profile
 worker/
   index.js        router: www redirect, /auth and /api
   auth.js         Google OIDC + signed session cookie
+  games.js        /api/games: save, list, load, delete
 migrations/
   0001_init.sql   users, games, game_players, turns
+  0002_...sql     games.updated_at
 ```
 
 `public/` is what gets published and nothing outside it is, so
@@ -113,6 +116,15 @@ npx wrangler dev --port 8790
 
 Signing in is **optional** — every game works signed out, exactly as it did
 before accounts existed. Signing in adds a stored history of your games.
+
+A finished game is written to your profile automatically. An unfinished one is
+written when you press **Save** during play, which is what lets you pick it up
+later or on another device — the setup screen then offers *Resume from
+profile* alongside the local resume. Both are offered when both exist, rather
+than one silently winning: they are usually different games.
+
+`localStorage` remains the live state throughout. Nothing on the scoring path
+waits on the network, so a game plays identically with no signal.
 
 Sign-in is Google only, via OIDC with PKCE. The session is a cookie carrying a
 signed `{uid, exp}` payload rather than a row in a sessions table, so an

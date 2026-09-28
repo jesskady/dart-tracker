@@ -32,3 +32,23 @@
   background:var(--bg2);border:1px solid var(--line);border-radius:11px;
   padding:11px 17px;color:var(--txt);text-decoration:none;font-size:14px;font-weight:600;
 }
+
+.game-list{display:flex;flex-direction:column;gap:1px;list-style:none}
+.game-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 2px;border-top:1px solid var(--line);
+}
+.game-row:first-child{border-top:none}
+
+.game-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.game-main b{font-size:14.5px;font-weight:700}
+.game-main small{color:var(--dim);font-size:11.5px}
+
+.game-side{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none}
+.game-side small{color:var(--dim);font-size:11px}
+.game-tag{
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:2px 8px;
+}
+/* unfinished is the row worth spotting in a long list */
+.game-tag.live{color:var(--gold);border-color:#4a3c18;background:#241f11}

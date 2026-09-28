@@ -11,8 +11,8 @@
 <!-- ?v= must be bumped whenever a stylesheet or app.js changes. Each file is
      cached independently at the edge, so without this a new index.html can
      load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="../shared.css?v=16">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="../shared.css?v=17">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -80,6 +80,8 @@
 
   <button id="startBtn" class="primary big">Start Game</button>
   <button id="resumeBtn" class="ghost hidden">Resume saved game</button>
+  <!-- unfinished games from the profile, filled in when signed in -->
+  <div id="cloudResume" class="cloud-resume"></div>
 </section>
 
 <!-- ============ GAME ============ -->
@@ -135,9 +137,12 @@
 
   <div class="actions">
     <button id="submitBtn" class="primary big">Submit turn</button>
-    <div class="mini-row">
+    <!-- Save is revealed only when signed in: with no profile there is
+         nowhere for it to save to, and a fourth button crowds the row. -->
+    <div class="mini-row" id="miniRow">
       <button id="undoTurn" class="ghost">Undo turn</button>
       <button id="bustBtn" class="ghost bust-btn">Bust</button>
+      <button id="saveBtn" class="ghost hidden">Save</button>
       <button id="quitBtn" class="ghost">New game</button>
     </div>
   </div>
@@ -166,7 +171,8 @@
   </div>
 </div>
 
-<script src="/account.js?v=16" defer></script>
-<script src="app.js?v=16"></script>
+<script src="/account.js?v=17" defer></script>
+<script src="sync.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
