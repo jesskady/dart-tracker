@@ -92,5 +92,5 @@ npx wrangler login     # once per machine
 npx wrangler deploy
 ```
 
-Unknown paths fall back to `index.html` (`not_found_handling`), so a mistyped
-URL lands on the game rather than an error page.
+Unknown paths 404 (`not_found_handling: "none"`). There is no client-side
+routing to rescue, so a wrong path is genuinely not found.

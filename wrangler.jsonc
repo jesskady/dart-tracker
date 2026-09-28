@@ -15,8 +15,8 @@
     // it into a reload loop.
     "directory": "public",
 
-    // Unknown paths return index.html rather than a 404 page. The app is a
-    // single page, so a mistyped URL lands on the game instead of an error.
-    "not_found_handling": "single-page-application"
+    // The app has no client-side routing, so there is no route for a fallback
+    // to rescue. A wrong path is genuinely not found, and says so.
+    "not_found_handling": "none"
   }
 }
