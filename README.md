@@ -83,9 +83,11 @@ npx wrangler dev --port 8790
 
 ## Deploying
 
-Hosted on Cloudflare as a **Worker with static assets** — not Pages. There is
-no `main` in `wrangler.jsonc`, so no Worker code runs; every request is served
-straight from `public/`.
+Hosted on Cloudflare as a **Worker with static assets** — not Pages. The site
+itself is static; `worker/index.js` exists only to 301 `www.scorechalk.com` to
+the apex, and hands every other request to `public/` untouched. Both hostnames
+are declared in `wrangler.jsonc`, so a fresh clone can rebuild the whole
+deployment from that file.
 
 ```sh
 npx wrangler login     # once per machine

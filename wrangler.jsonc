@@ -4,10 +4,20 @@
   "name": "scorechalk",
   "compatibility_date": "2026-09-28",
 
-  // Static-only: there is no "main", so no Worker script runs. Every request
-  // is served straight from the uploaded assets. The site is three files and
-  // needs no backend — if that ever changes, add "main" and the routes it
-  // should intercept.
+  // The live site, plus the www host that redirects to it. Declaring these
+  // here rather than clicking them into the dashboard means a fresh clone can
+  // rebuild the whole deployment from this file. Cloudflare creates and
+  // manages the DNS record for each custom domain, so there is nothing to add
+  // by hand in the zone.
+  "routes": [
+    { "pattern": "scorechalk.com", "custom_domain": true },
+    { "pattern": "www.scorechalk.com", "custom_domain": true }
+  ],
+
+  // The site itself is static. This Worker exists only to redirect www to the
+  // apex — everything else it hands to the asset store untouched.
+  "main": "worker/index.js",
+
   "assets": {
     // Everything in here is published, and nothing else is. Pointing this at
     // the repo root instead would upload .git and README.md, and would make
@@ -17,6 +27,13 @@
 
     // The app has no client-side routing, so there is no route for a fallback
     // to rescue. A wrong path is genuinely not found, and says so.
-    "not_found_handling": "none"
+    "not_found_handling": "none",
+
+    "binding": "ASSETS",
+
+    // Without this the asset store answers first and the Worker never sees a
+    // request for a path that exists — so www./ would serve the site instead
+    // of redirecting. The redirect has to be decided before assets are tried.
+    "run_worker_first": true
   }
 }
