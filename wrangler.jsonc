@@ -1,0 +1,22 @@
+{
+  // Must exactly match the Worker's name in the Cloudflare dashboard, or
+  // deploying will create a second Worker instead of updating this one.
+  "name": "scorechalk",
+  "compatibility_date": "2026-09-28",
+
+  // Static-only: there is no "main", so no Worker script runs. Every request
+  // is served straight from the uploaded assets. The site is three files and
+  // needs no backend — if that ever changes, add "main" and the routes it
+  // should intercept.
+  "assets": {
+    // Everything in here is published, and nothing else is. Pointing this at
+    // the repo root instead would upload .git and README.md, and would make
+    // `wrangler dev` watch its own .wrangler scratch directory — which sends
+    // it into a reload loop.
+    "directory": "public",
+
+    // Unknown paths return index.html rather than a 404 page. The app is a
+    // single page, so a mistyped URL lands on the game instead of an error.
+    "not_found_handling": "single-page-application"
+  }
+}
