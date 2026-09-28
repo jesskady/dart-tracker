@@ -70,12 +70,16 @@ public/
   index.html      game chooser
   home.css        chooser styles
   shared.css      palette + reset, used by every page
+  account.js      sign-in strip on the chooser
   darts/
     index.html
     app.js
     style.css
 worker/
-  index.js        www -> apex redirect, nothing else
+  index.js        router: www redirect, /auth and /api
+  auth.js         Google OIDC + signed session cookie
+migrations/
+  0001_init.sql   users, games, game_players, turns
 ```
 
 `public/` is what gets published and nothing outside it is, so
@@ -100,6 +104,46 @@ or the real Workers runtime, which is what production serves:
 ```sh
 npx wrangler dev --port 8790
 ```
+
+## Accounts
+
+Signing in is **optional** — every game works signed out, exactly as it did
+before accounts existed. Signing in adds a stored history of your games.
+
+Sign-in is Google only, via OIDC with PKCE. The session is a cookie carrying a
+signed `{uid, exp}` payload rather than a row in a sessions table, so an
+authenticated request costs no database read. Data lives in Cloudflare D1
+(`migrations/`); the schema is in `migrations/0001_init.sql`.
+
+With nothing configured the site still serves normally: `/api/me` reports
+`auth: false` and the account strip stays hidden. To turn it on:
+
+1. **Google Cloud Console** → create a project → **APIs & Services →
+   Credentials** → *Create credentials → OAuth client ID* → **Web application**.
+   - Authorised redirect URI: `https://scorechalk.com/auth/google/callback`
+   - Fill in the OAuth consent screen. Publishing it externally needs a
+     privacy policy URL.
+2. Put the client id in `wrangler.jsonc` under `vars.GOOGLE_CLIENT_ID` — it is
+   public by design and travels in the sign-in URL.
+3. Set the two secrets, which must **never** go in `wrangler.jsonc`:
+
+   ```sh
+   npx wrangler secret put GOOGLE_CLIENT_SECRET
+   npx wrangler secret put SESSION_SECRET     # e.g. openssl rand -hex 32
+   ```
+
+Rotating `SESSION_SECRET` signs everyone out, which is the intended lever if a
+session ever needs revoking.
+
+### Migrations
+
+```sh
+npx wrangler d1 migrations apply scorechalk --local    # dev database
+npx wrangler d1 migrations apply scorechalk --remote   # production
+```
+
+Local dev reads secrets from `.dev.vars` (gitignored). It is **not watched** —
+restart `wrangler dev` after editing it.
 
 ## Deploying
 

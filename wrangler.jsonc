@@ -14,9 +14,26 @@
     { "pattern": "www.scorechalk.com", "custom_domain": true }
   ],
 
-  // The site itself is static. This Worker exists only to redirect www to the
-  // apex — everything else it hands to the asset store untouched.
+  // The games are static; the Worker handles the www redirect and the /auth
+  // and /api routes behind sign-in.
   "main": "worker/index.js",
+
+  // Accounts and game history. GOOGLE_CLIENT_SECRET and SESSION_SECRET are
+  // secrets (wrangler secret put), not vars — they must never live in here.
+  // GOOGLE_CLIENT_ID is public by design: it travels in the sign-in URL.
+  "vars": {
+    // Pinned so the OAuth redirect_uri always matches what is registered with
+    // Google, whatever host the request arrived on.
+    "PUBLIC_ORIGIN": "https://scorechalk.com"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "scorechalk",
+      "database_id": "618664cf-96de-4278-ae3a-7112d0ddfa1f"
+    }
+  ],
 
   "assets": {
     // Everything in here is published, and nothing else is. Pointing this at
