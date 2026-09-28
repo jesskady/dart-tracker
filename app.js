@@ -1,4 +1,4 @@
-/* Dart Tracker — two-player countdown scoring */
+/* Score Chalk — two-player countdown scoring */
 
 const KEY = 'dart-tracker-v1';
 const MAX_DARTS = 3;
@@ -166,6 +166,14 @@ function buildBoard() {
   document.querySelector('[data-bull]').addEventListener('click', () => addDart(25, true));
   document.querySelector('[data-miss]').addEventListener('click', () => addDart(0));
   $('undoDart').addEventListener('click', undoDart);
+
+  // the checkout box is rebuilt on every render, so its arrows are delegated
+  $('checkout').addEventListener('click', e => {
+    const arrow = e.target.closest('.co-arrow');
+    if (!arrow) return;
+    coIdx += Number(arrow.dataset.co);
+    render();
+  });
   $('submitBtn').addEventListener('click', submitTurn);
   $('bustBtn').addEventListener('click', bustTurn);
   $('undoTurn').addEventListener('click', undoTurn);
@@ -373,18 +381,27 @@ function setupPaths(target, n, mustOpenDouble) {
   return out;
 }
 
-/* Cheapest legal path of exactly `darts` throws, by the costs above. */
+/* Every legal path of exactly `darts` throws, cheapest first by the costs
+   above. Routes that differ only in the order of their setup darts are one
+   route, kept at its cheapest ordering — otherwise cycling would walk through
+   T20 T19 D12 and T19 T20 D12 as though they were different ideas. */
 function searchFinish(target, darts, needDouble, mustOpenDouble) {
   const finishers = needDouble ? FINISH_DOUBLES : FINISH_ANY;
-  let best = null, bestCost = Infinity;
+  const seen = new Map();   // signature -> { path, cost }
+
+  const consider = (path, cost) => {
+    const sig = path.slice(0, -1).map(t => t.label).sort().join(',')
+      + '>' + path[path.length - 1].label;
+    const prev = seen.get(sig);
+    if (!prev || cost < prev.cost) seen.set(sig, { path, cost });
+  };
 
   for (const f of finishers) {
     const rem = target - f.val;
 
     if (darts === 1) {
       if (rem !== 0 || (mustOpenDouble && !f.dbl)) continue;
-      const c = finishCost(f, needDouble);
-      if (c < bestCost) { bestCost = c; best = [f]; }
+      consider([f], finishCost(f, needDouble));
       continue;
     }
 
@@ -392,28 +409,40 @@ function searchFinish(target, darts, needDouble, mustOpenDouble) {
     for (const setup of setupPaths(rem, darts - 1, mustOpenDouble)) {
       let c = finishCost(f, needDouble);
       setup.forEach((t, i) => { c += setupCost(t, darts - 1 - i); });
-      if (c < bestCost) { bestCost = c; best = [...setup, f]; }
+      consider([...setup, f], c);
     }
   }
-  return best;
+
+  // sort is stable, so equal-cost routes keep the preference order they were
+  // found in — which leaves the first entry exactly what it always was
+  return [...seen.values()].sort((a, b) => a.cost - b.cost).map(e => e.path);
 }
 
-/* Shortest finish available, or null. Tries 1 dart, then 2, then 3.
+/* Ways to finish, shortest first and cheapest first within that, or empty.
+   Only the shortest dart count is offered: if a leg can be closed in one
+   dart, walking the player through three-dart routes to the same number is
+   noise, not an alternative. Capped so cycling stays a short loop.
    Memoised because render() asks on every dart tapped. */
+const MAX_SUGGESTIONS = 6;
 const finishCache = new Map();
 
-function findFinish(target, dartsLeft, needDouble, mustOpenDouble) {
-  if (target < 1 || dartsLeft < 1) return null;
+function finishKey(target, dartsLeft, needDouble, mustOpenDouble) {
+  return `${target}|${dartsLeft}|${needDouble ? 1 : 0}|${mustOpenDouble ? 1 : 0}`;
+}
 
-  const key = `${target}|${dartsLeft}|${needDouble ? 1 : 0}|${mustOpenDouble ? 1 : 0}`;
+function findFinishes(target, dartsLeft, needDouble, mustOpenDouble) {
+  if (target < 1 || dartsLeft < 1) return [];
+
+  const key = finishKey(target, dartsLeft, needDouble, mustOpenDouble);
   if (finishCache.has(key)) return finishCache.get(key);
 
-  let path = null;
-  for (let k = 1; k <= dartsLeft && !path; k++) {
-    path = searchFinish(target, k, needDouble, mustOpenDouble);
+  let paths = [];
+  for (let k = 1; k <= dartsLeft && !paths.length; k++) {
+    paths = searchFinish(target, k, needDouble, mustOpenDouble);
   }
-  finishCache.set(key, path);
-  return path;
+  paths = paths.slice(0, MAX_SUGGESTIONS);
+  finishCache.set(key, paths);
+  return paths;
 }
 
 /* Highest score that could possibly be finished with this many darts. */
@@ -539,6 +568,24 @@ async function undoTurn() {
   say(`Undid ${p.name}'s ${last.pts}`);
 }
 
+/* Which alternative the player has paged to, and the position it was paged
+   for. Paging is deliberately transient — a thrown dart changes the target,
+   and the old choice would no longer mean anything — so it is not saved. */
+let coIdx = 0;
+let coKey = '';
+
+/* The chevron is drawn, not typed: ‹ and › carry uneven side bearings, so
+   centring their advance width still leaves the ink visibly off-centre in the
+   button. Both paths span x 9..15 of a 24-wide box, so each is centred and
+   the pair mirrors exactly. */
+function coArrow(dir, cls, label) {
+  const d = dir > 0 ? 'M9 5.5 L15 12 L9 18.5' : 'M15 5.5 L9 12 L15 18.5';
+  return `<button class="co-arrow ${cls}" data-co="${dir}" aria-label="${label} checkout">`
+    + `<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">`
+    + `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6"`
+    + ` stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+}
+
 function renderCheckout(left) {
   const box = $('checkout');
   const dartsLeft = MAX_DARTS - S.darts.length;
@@ -550,19 +597,32 @@ function renderCheckout(left) {
     return;
   }
 
-  const path = findFinish(left, dartsLeft, S.doubleOut, mustOpen);
-  if (path) {
+  const paths = findFinishes(left, dartsLeft, S.doubleOut, mustOpen);
+  if (paths.length) {
+    const key = finishKey(left, dartsLeft, S.doubleOut, mustOpen);
+    if (key !== coKey) { coKey = key; coIdx = 0; }
+    coIdx = Math.min(Math.max(coIdx, 0), paths.length - 1);
+
     box.className = 'checkout';
-    box.innerHTML = '<span class="co-label">Checkout</span><span class="co-darts">'
-      + path.map(t => `<b>${t.label}</b>`).join('') + '</span>';
+    box.innerHTML =
+      (coIdx > 0 ? coArrow(-1, 'prev', 'Previous') : '')
+      + '<span class="co-label">Checkout</span>'
+      + '<span class="co-darts">' + paths[coIdx].map(t => `<b>${t.label}</b>`).join('') + '</span>'
+      + (coIdx < paths.length - 1 ? coArrow(1, 'next', 'Next') : '');
     return;
   }
 
   // only worth saying when a finish was even conceivable (bogey numbers)
-  box.className = 'checkout empty';
-  box.innerHTML = left <= maxFinish(dartsLeft, S.doubleOut)
-    ? `<span class="co-none">No ${dartsLeft}-dart finish from ${left}</span>`
-    : '';
+  if (left <= maxFinish(dartsLeft, S.doubleOut)) {
+    box.className = 'checkout empty';
+    box.innerHTML = `<span class="co-none">No ${dartsLeft}-dart finish from ${left}</span>`;
+    return;
+  }
+
+  // Still out of range. The box would otherwise sit blank for most of a leg,
+  // so it explains itself instead — quietly, and only here.
+  box.className = 'checkout empty hint';
+  box.innerHTML = '<span class="co-hint">Checkout darts appear here once you’re in range</span>';
 }
 
 function showWin(p) {

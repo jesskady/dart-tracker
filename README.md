@@ -1,4 +1,4 @@
-# 🎯 Dart Tracker
+# 🎯 Score Chalk
 
 A tiny, mobile-first score tracker for countdown darts (501, 301, or any starting score you like) — head to head, or solo for practice. No build step, no dependencies — three static files.
 

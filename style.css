@@ -44,6 +44,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;tou
 .brand h1{font-size:26px;letter-spacing:-.5px}
 .brand p{color:var(--dim);font-size:13px;margin-top:2px}
 
+/* The game screen is vertically tight — scoreboard, pad and submit button all
+   have to share one screen — so its wordmark is a small quiet line, not a
+   second full-size heading. */
+.brand.compact{padding:0}
+.brand.compact h1{
+  font-size:13px;font-weight:700;letter-spacing:1.6px;
+  text-transform:uppercase;color:var(--dim);
+}
+
 .card{
   background:var(--card);
   border:1px solid var(--line);
@@ -190,10 +199,26 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 /* ---------- Checkout suggestion ---------- */
 .checkout{
+  position:relative;
   display:flex;align-items:center;justify-content:center;gap:8px;
-  min-height:34px;padding:4px 8px;
+  min-height:34px;padding:4px 38px;
   border:1px solid var(--line);border-radius:11px;background:var(--card);
 }
+/* Absolutely positioned, so the darts stay centred and do not jump sideways
+   when the back arrow appears after the first page over. The generous top/
+   bottom stretch is tap area — the box itself is too short to give it. */
+.co-arrow{
+  position:absolute;top:3px;bottom:3px;width:34px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--dim);
+  border:1px solid var(--line);border-radius:8px;background:var(--bg2);
+}
+/* block kills the inline baseline gap; pointer-events keeps the click target
+   the button itself, so the delegated handler never sees a <path> */
+.co-arrow svg{display:block;pointer-events:none}
+.co-arrow.prev{left:3px}
+.co-arrow.next{right:3px}
+.co-arrow:active{background:var(--line);color:var(--txt)}
 .co-label{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--dim)}
 .co-darts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .co-darts b{
@@ -202,7 +227,10 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   padding:3px 9px;border-radius:7px;
 }
 .co-none{font-size:12px;color:var(--dim)}
+.co-hint{font-size:11px;color:var(--dim)}
 .checkout.empty{opacity:.35}
+/* the hint has to stay readable, so it opts out of the dimming above */
+.checkout.empty.hint{opacity:.7}
 
 /* ---------- Pads ---------- */
 .pad{display:flex;flex-direction:column;gap:6px}
@@ -221,17 +249,19 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
 .key{
   background:var(--card);border:1px solid var(--line);border-radius:11px;
-  padding:11px 0;font-size:17px;font-weight:700;text-align:center;
+  padding:14px 0;font-size:17px;font-weight:700;text-align:center;
   font-variant-numeric:tabular-nums;
 }
 .key:active{background:var(--green-d);border-color:var(--green)}
 
 .special-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 /* Bull is a real scoring key, so keep this row close to a 44px target */
-.special{font-size:13px;font-weight:600;padding:11px 0;color:var(--dim)}
+.special{font-size:13px;font-weight:600;padding:14px 0;color:var(--dim)}
 
 /* ---------- Actions ---------- */
-.actions{margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:2px}
+/* the wide gap is deliberate: Submit is tapped constantly and Bust / New game
+   are destructive, so they get real separation rather than a 6px neighbour */
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:26px;padding-top:2px}
 .mini-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 
 /* voids the turn — a play action, so it reads apart from the two neutral ones */
@@ -270,4 +300,5 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   .checkout{min-height:30px}
   .big{padding:11px;font-size:16px}
   .brand{padding:2px 0 0}
+  .brand.compact h1{font-size:11px}
 }
