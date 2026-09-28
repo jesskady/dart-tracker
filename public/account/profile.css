@@ -1,0 +1,34 @@
+/* Your profile. Reuses .screen and .brand from home.css. */
+
+.profile{justify-content:flex-start;gap:14px;padding-top:14px}
+
+/* the shared back link, same as the darts setup screen */
+.backlink{
+  align-self:flex-start;
+  color:var(--dim);font-size:13px;text-decoration:none;padding:6px 2px;
+}
+.backlink:active{color:var(--txt)}
+
+.prof{display:flex;flex-direction:column;gap:14px}
+
+.prof-head{display:flex;align-items:center;gap:14px;padding:4px 2px}
+.prof-avatar{width:60px;height:60px;border-radius:50%;display:block;object-fit:cover;flex:none}
+.prof-avatar.acct-initials{font-size:22px}
+.prof-id{display:flex;flex-direction:column;gap:3px;min-width:0}
+.prof-id h1{font-size:23px;letter-spacing:-.3px}
+.prof-id small{color:var(--dim);font-size:13px;overflow:hidden;text-overflow:ellipsis}
+
+.prof-card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px;
+}
+.prof-card h2{
+  font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--dim);margin-bottom:10px;
+}
+.prof-empty{color:var(--dim);font-size:13.5px;line-height:1.5}
+
+.prof-signin{
+  display:inline-flex;align-items:center;gap:9px;align-self:center;
+  background:var(--bg2);border:1px solid var(--line);border-radius:11px;
+  padding:11px 17px;color:var(--txt);text-decoration:none;font-size:14px;font-weight:600;
+}

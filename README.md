@@ -70,7 +70,11 @@ public/
   index.html      game chooser
   home.css        chooser styles
   shared.css      palette + reset, used by every page
-  account.js      sign-in strip on the chooser
+  account.js      account bubble, injected into every page
+  account/
+    index.html    your profile
+    profile.js
+    profile.css
   darts/
     index.html
     app.js

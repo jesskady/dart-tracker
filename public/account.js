@@ -1,14 +1,12 @@
-/* The account strip on the chooser.
+/* The account bubble, top right of every page.
  *
- * Signing in is optional — the games work without it — so this is written to
- * degrade quietly: if /api/me fails, or sign-in is not configured on this
- * deployment, the strip simply stays empty and nothing else is affected.
+ * Injects its own markup rather than expecting each page to carry it, so
+ * adding a game means adding one script tag and nothing else. Signing in is
+ * optional — the games work without it — so this degrades quietly: if
+ * /api/me fails or sign-in is not configured, nothing appears at all.
  */
 
 (function () {
-  const box = document.getElementById('account');
-  if (!box) return;
-
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -16,42 +14,111 @@
     return n;
   };
 
-  function showSignedOut() {
-    const a = el('a', 'acct-signin');
-    a.href = '/auth/google/start?next=' + encodeURIComponent(location.pathname);
-    a.append(el('span', 'acct-g', 'G'), document.createTextNode('Sign in with Google'));
+  const root = el('div', 'acct');
+  root.hidden = true;                      // nothing reserves space until we know
+  document.body.appendChild(root);
 
-    box.replaceChildren(a, el('p', 'acct-why', 'Optional — sign in to keep a history of your games.'));
+  const signInHref = () =>
+    '/auth/google/start?next=' + encodeURIComponent(location.pathname + location.search);
+
+  /* ---------------- signed out ---------------- */
+
+  function renderSignedOut() {
+    const a = el('a', 'acct-pill');
+    a.href = signInHref();
+    a.title = 'Sign in to keep a history of your games';
+    a.append(el('span', 'acct-g', 'G'), el('span', 'acct-pill-text', 'Sign in'));
+    root.replaceChildren(a);
+    root.hidden = false;
   }
 
-  function showSignedIn(user) {
-    const who = el('div', 'acct-who');
+  /* ---------------- signed in ---------------- */
 
+  function avatarNode(user, cls) {
     if (user.avatar_url) {
-      const img = el('img', 'acct-avatar');
+      const img = el('img', cls);
       img.src = user.avatar_url;
       img.alt = '';
-      img.referrerPolicy = 'no-referrer';   // Google blocks hotlinks with a referrer
-      who.append(img);
+      // Google serves profile images only to requests without a referrer
+      img.referrerPolicy = 'no-referrer';
+      // if the image 404s or is blocked, fall back to initials in place
+      img.addEventListener('error', () => img.replaceWith(initialsNode(user, cls)));
+      return img;
     }
-    who.append(el('b', null, user.display_name));
+    return initialsNode(user, cls);
+  }
 
-    const out = el('button', 'acct-signout', 'Sign out');
+  function initialsNode(user, cls) {
+    const name = (user.display_name || '?').trim();
+    const initials = name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+    return el('span', cls + ' acct-initials', initials || '?');
+  }
+
+  function renderSignedIn(user) {
+    const btn = el('button', 'acct-bubble');
+    btn.type = 'button';
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Account menu');
+    btn.append(avatarNode(user, 'acct-img'));
+
+    const menu = el('div', 'acct-menu');
+    menu.setAttribute('role', 'menu');
+    menu.hidden = true;
+
+    const head = el('div', 'acct-head');
+    head.append(avatarNode(user, 'acct-img-lg'));
+    const who = el('div', 'acct-names');
+    who.append(el('b', null, user.display_name));
+    if (user.email) who.append(el('small', null, user.email));
+    head.append(who);
+
+    const profile = el('a', 'acct-item', 'Your profile');
+    profile.href = '/account/';
+    profile.setAttribute('role', 'menuitem');
+
+    const out = el('button', 'acct-item acct-danger', 'Sign out');
+    out.type = 'button';
+    out.setAttribute('role', 'menuitem');
     out.addEventListener('click', async () => {
       out.disabled = true;
       try { await fetch('/auth/logout', { method: 'POST' }); } catch (e) { /* offline */ }
       location.reload();
     });
 
-    box.replaceChildren(who, out);
+    menu.append(head, el('div', 'acct-sep'), profile, out);
+
+    const setOpen = (open) => {
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      root.classList.toggle('is-open', open);
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(menu.hidden);
+    });
+
+    // the two ways every familiar menu closes
+    document.addEventListener('click', (e) => {
+      if (!menu.hidden && !root.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
+    });
+
+    root.replaceChildren(btn, menu);
+    root.hidden = false;
   }
+
+  /* ---------------- boot ---------------- */
 
   fetch('/api/me', { headers: { accept: 'application/json' } })
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
-      if (!data || !data.auth) return;      // sign-in not configured here
-      if (data.user) showSignedIn(data.user);
-      else showSignedOut();
+      if (!data || !data.auth) return;     // sign-in not configured on this deployment
+      if (data.user) renderSignedIn(data.user);
+      else renderSignedOut();
     })
     .catch(() => { /* offline: the games still work, so say nothing */ });
 })();
