@@ -6,7 +6,7 @@
  */
 
 import { authConfigured, startGoogle, callbackGoogle, logout, me } from './auth.js';
-import { saveGame, listGames, getGame, deleteGame } from './games.js';
+import { saveGame, listGames, getGame, patchGame, deleteGame } from './games.js';
 import { getStats } from './stats.js';
 
 const CANONICAL = 'scorechalk.com';
@@ -50,6 +50,7 @@ export default {
     if (game) {
       if (!authConfigured(env)) return json({ error: 'Sign-in is not configured.' }, 503);
       if (request.method === 'GET') return getGame(request, env, game[1]);
+      if (request.method === 'PATCH') return patchGame(request, env, game[1]);
       if (request.method === 'DELETE') return deleteGame(request, env, game[1]);
       return json({ error: 'Method not allowed' }, 405);
     }

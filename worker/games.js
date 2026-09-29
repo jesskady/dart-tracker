@@ -195,6 +195,43 @@ export async function getGame(request, env, id) {
   });
 }
 
+/* Correcting a saved game after the fact. Only me_idx is editable: the darts
+   themselves are a record of what happened and are not up for revision, but
+   which player was the account holder is a labelling mistake worth fixing —
+   it decides whose statistics those darts landed in. */
+export async function patchGame(request, env, id) {
+  const uid = await currentUserId(request, env);
+  if (!uid) return json({ error: 'Not signed in' }, 401);
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  if (!isInt(body.me_idx) || body.me_idx < 0 || body.me_idx > 7) {
+    return json({ error: 'Invalid me_idx' }, 400);
+  }
+
+  const game = await env.DB.prepare('SELECT owner_user_id FROM games WHERE id = ?')
+    .bind(id).first();
+  if (!game || game.owner_user_id !== uid) return json({ error: 'Not found' }, 404);
+
+  // refuse to point at a player the game does not have
+  const player = await env.DB.prepare(
+    'SELECT 1 AS ok FROM game_players WHERE game_id = ? AND idx = ?'
+  ).bind(id, body.me_idx).first();
+  if (!player) return json({ error: 'No such player in that game' }, 400);
+
+  await env.DB.batch([
+    env.DB.prepare('UPDATE games SET me_idx = ?, updated_at = ? WHERE id = ? AND owner_user_id = ?')
+      .bind(body.me_idx, Date.now(), id, uid),
+    // keep the player row's account link in step with it
+    env.DB.prepare('UPDATE game_players SET user_id = CASE WHEN idx = ? THEN ? ELSE NULL END WHERE game_id = ?')
+      .bind(body.me_idx, uid, id),
+  ]);
+
+  return json({ ok: true, me_idx: body.me_idx });
+}
+
 export async function deleteGame(request, env, id) {
   const uid = await currentUserId(request, env);
   if (!uid) return json({ error: 'Not signed in' }, 401);

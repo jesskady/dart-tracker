@@ -69,7 +69,7 @@ Because every turn is entered dart by dart, both rules are checked against the a
 public/
   index.html      game chooser
   home.css        chooser styles
-  shared.css      palette + reset, used by every page
+  shared.css      palette, reset and shared controls, used by every page
   account.js      account bubble, injected into every page
   account/
     index.html    your profile: darts statistics and game history
@@ -149,6 +149,12 @@ loudly, it quietly credited your opponent's darts to you.
 
 Lifetime figures are aggregated in SQL; a single game's are computed in the
 browser from the turns `/api/games/:id` already returns.
+
+A game's own page can correct **who you were** — the darts are a record of
+what happened and are not editable, but which player the account holder was
+is a label, and it decides whose statistics those darts landed in. The same
+page deletes a game, behind a two-step confirmation; turns and players go
+with it.
 
 Sign-in is Google only, via OIDC with PKCE. The session is a cookie carrying a
 signed `{uid, exp}` payload rather than a row in a sessions table, so an

@@ -100,6 +100,79 @@
     return list;
   }
 
+  /* Correcting who the account holder was. The darts are a record of what
+     happened and stay put; this only relabels whose statistics they land in,
+     so the page re-renders from the server afterwards rather than guessing. */
+  function whoCard(g, names) {
+    const row = el('div', 'preset-row');
+
+    names.forEach((name, i) => {
+      const btn = el('button', 'seg' + (i === g.me_idx ? ' is-on' : ''), name);
+      btn.type = 'button';
+      btn.addEventListener('click', async () => {
+        if (i === g.me_idx) return;
+        [...row.children].forEach((b) => { b.disabled = true; });
+        try {
+          const res = await fetch('/api/games/' + encodeURIComponent(g.id), {
+            method: 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ me_idx: i }),
+          });
+          if (!res.ok) throw new Error();
+          load();                       // stats are now someone else's; re-read
+        } catch (e) {
+          [...row.children].forEach((b) => { b.disabled = false; });
+          note.textContent = 'Could not change that. Check your connection.';
+        }
+      });
+      row.append(btn);
+    });
+
+    const wrap = el('section', 'prof-card');
+    const note = el('p', 'prof-note', 'Statistics on this game count only this player’s darts.');
+    wrap.append(el('h2', null, 'You were'), row, note);
+    return wrap;
+  }
+
+  /* Two steps rather than a modal: the page has no confirm sheet of its own,
+     and deleting a game is not something to do on a mis-tap. */
+  function dangerCard(g) {
+    const wrap = el('section', 'prof-card');
+    wrap.append(el('h2', null, 'Delete'));
+
+    const msg = el('p', 'prof-note', 'Removes this game and every turn in it. This cannot be undone.');
+    const first = el('button', 'ghost danger-link', 'Delete this game');
+    first.type = 'button';
+
+    const confirmRow = el('div', 'confirm-row');
+    confirmRow.hidden = true;
+    const yes = el('button', 'danger big', 'Delete permanently');
+    yes.type = 'button';
+    const no = el('button', 'ghost', 'Cancel');
+    no.type = 'button';
+    confirmRow.append(yes, no);
+
+    first.addEventListener('click', () => { first.hidden = true; confirmRow.hidden = false; });
+    no.addEventListener('click', () => { confirmRow.hidden = true; first.hidden = false; });
+
+    yes.addEventListener('click', async () => {
+      yes.disabled = true;
+      yes.textContent = 'Deleting…';
+      try {
+        const res = await fetch('/api/games/' + encodeURIComponent(g.id), { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        location.href = '/account/';
+      } catch (e) {
+        yes.disabled = false;
+        yes.textContent = 'Delete permanently';
+        msg.textContent = 'Could not delete that. Check your connection and try again.';
+      }
+    });
+
+    wrap.append(msg, first, confirmRow);
+    return wrap;
+  }
+
   function show(g) {
     const names = (g.players || []).map((p) => p.name);
     const cfg = g.config || {};
@@ -123,7 +196,17 @@
       parts.push(playerCard(name, summarise(mine), i === g.me_idx, g.winner_idx === i));
     });
 
+    // an unfinished game is here to be managed, but picking it back up is
+    // the likelier reason to have opened it
+    if (!g.ended_at) {
+      const resume = el('a', 'primary big resume-link', 'Resume this game');
+      resume.href = `/${encodeURIComponent(g.game_type)}/?resume=${encodeURIComponent(g.id)}`;
+      parts.push(resume);
+    }
+
+    if (names.length > 1) parts.push(whoCard(g, names));
     if (g.turns.length) parts.push(card('Every turn', turnList(g, names)));
+    parts.push(dangerCard(g));
     box.replaceChildren(...parts);
   }
 
@@ -132,14 +215,18 @@
     return;
   }
 
-  fetch('/api/games/' + encodeURIComponent(id), { headers: { accept: 'application/json' } })
-    .then((r) => {
-      if (r.status === 401) throw new Error('Sign in to see this game.');
-      if (!r.ok) throw new Error('That game could not be found.');
-      return r.json();
-    })
-    .then((data) => show(data.game))
-    .catch((e) => {
-      box.replaceChildren(el('p', 'prof-empty', e.message || 'Could not load that game.'));
-    });
+  function load() {
+    fetch('/api/games/' + encodeURIComponent(id), { headers: { accept: 'application/json' } })
+      .then((r) => {
+        if (r.status === 401) throw new Error('Sign in to see this game.');
+        if (!r.ok) throw new Error('That game could not be found.');
+        return r.json();
+      })
+      .then((data) => show(data.game))
+      .catch((e) => {
+        box.replaceChildren(el('p', 'prof-empty', e.message || 'Could not load that game.'));
+      });
+  }
+
+  load();
 })();

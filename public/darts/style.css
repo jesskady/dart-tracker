@@ -52,15 +52,6 @@ input:focus{outline:none;border-color:var(--green)}
 input[type=number]{-moz-appearance:textfield}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
-.preset-row{display:flex;gap:8px}
-.preset,.seg{
-  flex:1;padding:12px 0;border-radius:10px;
-  background:var(--bg2);border:1px solid var(--line);
-  font-weight:600;font-size:17px;
-}
-.seg{font-size:15px}
-.preset.is-on,.seg.is-on{background:var(--green-d);border-color:var(--green);color:#fff}
-
 /* switch row */
 .toggle{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:2px}
 .tg-label{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -90,25 +81,6 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .badge.alert{
   color:#fff;background:var(--red);border-color:var(--red);
 }
-
-.primary{
-  background:var(--green);color:#fff;border-radius:14px;
-  font-weight:700;letter-spacing:.2px;
-}
-.primary:active{background:var(--green-d)}
-.big{padding:13px;font-size:17px;width:100%}
-
-.danger{
-  background:var(--red);color:#fff;border-radius:14px;
-  font-weight:700;letter-spacing:.2px;
-}
-.danger:active{background:#962d21}
-
-.ghost{
-  color:var(--dim);border:1px solid var(--line);
-  border-radius:11px;padding:9px;width:100%;font-size:14px;
-}
-.ghost:active{background:var(--card)}
 
 /* ---------- Scoreboard ---------- */
 .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:8px}

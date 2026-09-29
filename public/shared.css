@@ -92,3 +92,36 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;tou
 .acct-item:active{background:var(--bg2)}
 .acct-danger{color:#e2857a}
 .acct-danger:disabled{opacity:.5}
+
+/* ---------- Shared controls ----------
+   Buttons and segmented rows used by more than one page. They live here
+   rather than in a game's stylesheet because the account pages need them
+   too — and a second game will. A game may still override below. */
+
+.preset-row{display:flex;gap:8px}
+.preset,.seg{
+  flex:1;padding:12px 0;border-radius:10px;
+  background:var(--bg2);border:1px solid var(--line);
+  font-weight:600;font-size:17px;
+}
+.seg{font-size:15px}
+.preset.is-on,.seg.is-on{background:var(--green-d);border-color:var(--green);color:#fff}
+
+.primary{
+  background:var(--green);color:#fff;border-radius:14px;
+  font-weight:700;letter-spacing:.2px;
+}
+.primary:active{background:var(--green-d)}
+.big{padding:13px;font-size:17px;width:100%}
+
+.danger{
+  background:var(--red);color:#fff;border-radius:14px;
+  font-weight:700;letter-spacing:.2px;
+}
+.danger:active{background:#962d21}
+
+.ghost{
+  color:var(--dim);border:1px solid var(--line);
+  border-radius:11px;padding:9px;width:100%;font-size:14px;
+}
+.ghost:active{background:var(--card)}

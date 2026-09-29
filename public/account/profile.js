@@ -92,6 +92,7 @@
   function gameRow(g) {
     const row = el('li', 'game-row');
     const unfinished = !g.ended_at;
+    if (unfinished) row.classList.add('has-manage');
 
     const names = (g.players || []).map((p) => p.name);
     const won = g.winner_idx != null ? names[g.winner_idx] : null;
@@ -125,6 +126,21 @@
 
     inner.append(main, side, chevron());
     row.append(inner);
+
+    /* A pending row's tap resumes the game, so managing it needs its own
+       target. A sibling rather than a nested link — an <a> inside an <a> is
+       invalid and behaves unpredictably. Finished rows already lead here. */
+    if (unfinished) {
+      const manage = el('a', 'game-manage');
+      manage.href = `/account/game/?id=${encodeURIComponent(g.id)}`;
+      manage.setAttribute('aria-label', 'Manage ' + label);
+      manage.innerHTML =
+        '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+        '<circle cx="5" cy="12" r="1.8" fill="currentColor"/>' +
+        '<circle cx="12" cy="12" r="1.8" fill="currentColor"/>' +
+        '<circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>';
+      row.append(manage);
+    }
     return row;
   }
 

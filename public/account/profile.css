@@ -35,6 +35,15 @@
 
 .game-list{display:flex;flex-direction:column;gap:1px;list-style:none}
 .game-row{border-top:1px solid var(--line)}
+/* the manage target sits beside the row's own link, not inside it */
+.game-row.has-manage{display:flex;align-items:center;gap:4px}
+.game-row.has-manage .game-inner{flex:1;min-width:0}
+.game-manage{
+  flex:none;display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:9px;color:var(--dim);text-decoration:none;
+}
+.game-manage:active{background:var(--bg2);color:var(--txt)}
+.game-manage svg{display:block}
 .game-row:first-child{border-top:none}
 
 .game-inner{
@@ -91,3 +100,21 @@
 .turn-pts{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .turn-left{text-align:right;color:var(--dim);font-variant-numeric:tabular-nums}
 .turn-row.is-bust .turn-pts{color:var(--red);font-weight:600;font-size:11.5px;text-transform:uppercase}
+
+/* ---------- Managing a game ---------- */
+.prof-note{font-size:12px;color:var(--dim);line-height:1.45;margin-top:10px}
+
+/* the resume link is a button in everything but element name */
+.resume-link{display:block;text-align:center;text-decoration:none}
+
+.danger-link{color:#e2857a;border-color:#5a302a;margin-top:10px}
+.danger-link:active{background:#2a1a17}
+
+.confirm-row{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.confirm-row[hidden]{display:none}
+
+/* the "you were" buttons carry names, which can be long */
+#game .preset-row .seg{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#game .preset-row .seg:disabled{opacity:.5}
