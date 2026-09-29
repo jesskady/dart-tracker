@@ -72,9 +72,12 @@ public/
   shared.css      palette + reset, used by every page
   account.js      account bubble, injected into every page
   account/
-    index.html    your profile
+    index.html    your profile: darts statistics and game history
     profile.js
     profile.css
+    game/
+      index.html  one game's statistics, turn by turn
+      game.js
   darts/
     index.html
     app.js
@@ -84,9 +87,11 @@ worker/
   index.js        router: www redirect, /auth and /api
   auth.js         Google OIDC + signed session cookie
   games.js        /api/games: save, list, load, delete
+  stats.js        /api/stats: lifetime darts figures, in SQL
 migrations/
   0001_init.sql   users, games, game_players, turns
   0002_...sql     games.updated_at
+  0003_...sql     games.me_idx
 ```
 
 `public/` is what gets published and nothing outside it is, so
@@ -125,6 +130,22 @@ than one silently winning: they are usually different games.
 
 `localStorage` remains the live state throughout. Nothing on the scoring path
 waits on the network, so a game plays identically with no signal.
+
+### Statistics
+
+Your profile shows lifetime darts figures — three-dart average, best turn,
+best checkout, best leg, 180s and so on — and every game links to its own
+breakdown, per player, with the leg turn by turn.
+
+Statistics need to know **which player is you**, or a game is two anonymous
+names and there is no whose to the average. `games.me_idx` records it,
+resolved when a game is saved by matching the signed-in display name against
+the player names. The setup screen pre-fills player one with that name to make
+the match reliable, and the fallback is player one — whoever enters the darts
+almost always sits there.
+
+Lifetime figures are aggregated in SQL; a single game's are computed in the
+browser from the turns `/api/games/:id` already returns.
 
 Sign-in is Google only, via OIDC with PKCE. The session is a cookie carrying a
 signed `{uid, exp}` payload rather than a row in a sessions table, so an

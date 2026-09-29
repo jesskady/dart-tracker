@@ -40,6 +40,7 @@ function validate(body) {
   if (!isInt(body.started_at)) return 'started_at';
   if (body.ended_at != null && !isInt(body.ended_at)) return 'ended_at';
   if (body.winner_idx != null && !isInt(body.winner_idx)) return 'winner_idx';
+  if (body.me_idx != null && (!isInt(body.me_idx) || body.me_idx < 0 || body.me_idx > 7)) return 'me_idx';
 
   if (!Array.isArray(body.players) || body.players.length < 1 || body.players.length > 8) return 'players';
   for (const p of body.players) {
@@ -86,15 +87,16 @@ export async function saveGame(request, env) {
 
   stmts.push(
     env.DB.prepare(
-      `INSERT INTO games (id, owner_user_id, game_type, config, started_at, ended_at, winner_idx, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO games (id, owner_user_id, game_type, config, started_at, ended_at, winner_idx, me_idx, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          config = excluded.config,
          ended_at = excluded.ended_at,
          winner_idx = excluded.winner_idx,
+         me_idx = excluded.me_idx,
          updated_at = excluded.updated_at`
     ).bind(body.id, uid, body.game_type, config, body.started_at,
-           body.ended_at ?? null, body.winner_idx ?? null, now)
+           body.ended_at ?? null, body.winner_idx ?? null, body.me_idx ?? 0, now)
   );
 
   for (const p of body.players) {
@@ -102,7 +104,7 @@ export async function saveGame(request, env) {
       env.DB.prepare(
         `INSERT INTO game_players (game_id, idx, name, user_id) VALUES (?, ?, ?, ?)
          ON CONFLICT(game_id, idx) DO UPDATE SET name = excluded.name`
-      ).bind(body.id, p.idx, p.name, null)
+      ).bind(body.id, p.idx, p.name, p.idx === (body.me_idx ?? 0) ? uid : null)
     );
   }
 
@@ -146,7 +148,7 @@ export async function listGames(request, env, url) {
   const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 200);
 
   const rows = await env.DB.prepare(
-    `SELECT g.id, g.game_type, g.config, g.started_at, g.ended_at, g.winner_idx, g.updated_at,
+    `SELECT g.id, g.game_type, g.config, g.started_at, g.ended_at, g.winner_idx, g.me_idx, g.updated_at,
             (SELECT COUNT(*) FROM turns t WHERE t.game_id = g.id) AS turn_count,
             (SELECT json_group_array(json_object('idx', p.idx, 'name', p.name))
                FROM (SELECT idx, name FROM game_players WHERE game_id = g.id ORDER BY idx) p
@@ -167,7 +169,7 @@ export async function getGame(request, env, id) {
   if (!uid) return json({ error: 'Not signed in' }, 401);
 
   const game = await env.DB.prepare(
-    `SELECT id, owner_user_id, game_type, config, started_at, ended_at, winner_idx, updated_at
+    `SELECT id, owner_user_id, game_type, config, started_at, ended_at, winner_idx, me_idx, updated_at
        FROM games WHERE id = ?`
   ).bind(id).first();
 
@@ -220,6 +222,7 @@ function shape(row) {
     started_at: row.started_at,
     ended_at: row.ended_at,
     winner_idx: row.winner_idx,
+    me_idx: row.me_idx,
     updated_at: row.updated_at,
     turn_count: row.turn_count,
   };

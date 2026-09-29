@@ -49,6 +49,37 @@
   const fmtDate = (ms) =>
     new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
+  /* A stat only earns a tile if it has a value. Showing "Best checkout: —"
+     to someone who has never checked out is noise dressed as data. */
+  function tile(label, value, note) {
+    if (value == null) return null;
+    const t = el('div', 'stat');
+    t.append(el('b', null, String(value)), el('span', null, label));
+    if (note) t.append(el('small', null, note));
+    return t;
+  }
+
+  function statsGrid(s) {
+    const winPct = s.finished ? Math.round((s.won / s.finished) * 100) : null;
+
+    const tiles = [
+      tile('3-dart average', s.three_dart_average),
+      tile('Games won', s.finished ? `${s.won}/${s.finished}` : null, winPct != null ? `${winPct}%` : null),
+      tile('Best turn', s.best_turn),
+      tile('Best checkout', s.best_checkout),
+      tile('Best leg', s.best_leg_darts, s.best_leg_darts ? 'darts' : null),
+      tile('180s', s.n180),
+      tile('140+', s.n140),
+      tile('100+', s.n100),
+      tile('Darts thrown', s.darts),
+      tile('Busts', s.busts),
+    ].filter(Boolean);
+
+    const grid = el('div', 'stat-grid');
+    tiles.forEach((t) => grid.append(t));
+    return grid;
+  }
+
   function chevron() {
     const wrap = el('span', 'game-go');
     wrap.innerHTML =
@@ -66,15 +97,14 @@
     const won = g.winner_idx != null ? names[g.winner_idx] : null;
     const label = names.join(' vs ') || 'Game';
 
-    // An unfinished game can be picked up; a finished one has nowhere to go
-    // yet, so it stays plain text rather than looking tappable and doing
-    // nothing. game_type picks the destination, so this needs no change when
-    // a second game exists.
-    const inner = unfinished ? el('a', 'game-inner game-link') : el('div', 'game-inner');
-    if (unfinished) {
-      inner.href = `/${encodeURIComponent(g.game_type)}/?resume=${encodeURIComponent(g.id)}`;
-      inner.setAttribute('aria-label', `Resume ${label}`);
-    }
+    // Both kinds of row lead somewhere now: an unfinished game back to the
+    // board, a finished one to its own statistics. game_type picks the
+    // resume destination, so that needs no change when a second game exists.
+    const inner = el('a', 'game-inner game-link');
+    inner.href = unfinished
+      ? `/${encodeURIComponent(g.game_type)}/?resume=${encodeURIComponent(g.id)}`
+      : `/account/game/?id=${encodeURIComponent(g.id)}`;
+    inner.setAttribute('aria-label', (unfinished ? 'Resume ' : 'Statistics for ') + label);
 
     const main = el('div', 'game-main');
     main.append(el('b', null, label));
@@ -93,8 +123,7 @@
       unfinished ? 'Resume' : (won ? `${won} won` : 'Finished')));
     side.append(el('small', null, fmtDate(g.ended_at || g.updated_at || g.started_at)));
 
-    inner.append(main, side);
-    if (unfinished) inner.append(chevron());
+    inner.append(main, side, chevron());
     row.append(inner);
     return row;
   }
@@ -106,8 +135,22 @@
     if (user.email) id.append(el('small', null, user.email));
     head.append(avatar(user), id);
 
+    const statsBody = el('p', 'prof-empty', 'Loading…');
+    const statsCard = card('Darts', statsBody);
+
     const loading = el('p', 'prof-empty', 'Loading your games…');
-    box.replaceChildren(head, card('Your games', loading));
+    box.replaceChildren(head, statsCard, card('Your games', loading));
+
+    fetch('/api/stats?game_type=darts', { headers: { accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (!s || !s.turns) {
+          statsBody.textContent = 'Play a game and your darts statistics will appear here.';
+          return;
+        }
+        statsBody.replaceWith(statsGrid(s));
+      })
+      .catch(() => { statsBody.textContent = 'Could not load your statistics.'; });
 
     fetch('/api/games?limit=50', { headers: { accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : null))

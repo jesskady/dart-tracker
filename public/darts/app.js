@@ -190,6 +190,22 @@ function buildSetup() {
   }
 
   buildCloudResume(saved);
+  prefillMyName();
+}
+
+/* Pre-fills player one with the signed-in first name. Convenience, but also
+   what makes statistics reliable: the game records which player is the
+   account holder by matching this name, and player one is where the person
+   entering the darts almost always sits. Never overwrites typing. */
+async function prefillMyName() {
+  if (!window.SCSync) return;
+  const who = await window.SCSync.me();
+  if (!who || !who.user || !who.user.display_name) return;
+
+  const input = $('name1');
+  if (!input || input.value.trim()) return;
+  input.placeholder = who.user.display_name.trim().split(/\s+/)[0] || input.placeholder;
+  input.value = input.placeholder;
 }
 
 /* ?resume=<id> — arriving from a game tapped on the profile.

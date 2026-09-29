@@ -21,9 +21,28 @@ window.SCSync = (function () {
 
   /* ---------------- payload ---------------- */
 
+  /* Which player is the account holder. Statistics are meaningless without
+     it — two names and no idea whose average is whose.
+
+     Matched on the signed-in display name, first name included, because the
+     setup screen pre-fills player one with it. Falling back to 0 is right far
+     more often than not: whoever is holding the phone and entering the darts
+     is player one. */
+  function resolveMeIdx(S, user) {
+    if (!user || !user.display_name) return 0;
+
+    const norm = (s) => String(s).trim().toLowerCase();
+    const full = norm(user.display_name);
+    const first = full.split(/s+/)[0];
+
+    let idx = S.players.findIndex((p) => norm(p.name) === full);
+    if (idx < 0) idx = S.players.findIndex((p) => norm(p.name) === first);
+    return idx < 0 ? 0 : idx;
+  }
+
   /* S.log holds turns in the order they were played, so a player's turn
      number is simply how many of their own turns came before it. */
-  function toPayload(S) {
+  function toPayload(S, user) {
     const counts = [];
     const turns = S.log.map((t, i) => {
       const n = counts[t.player] || 0;
@@ -49,6 +68,7 @@ window.SCSync = (function () {
         solo: S.players.length === 1,
       },
       started_at: S.startedAt,
+      me_idx: resolveMeIdx(S, user),
       ended_at: S.over ? Date.now() : null,
       winner_idx: S.over && S.winner != null ? S.winner : null,
       players: S.players.map((p, idx) => ({ idx, name: p.name })),
@@ -57,10 +77,11 @@ window.SCSync = (function () {
   }
 
   async function post(S) {
+    const data = await me();
     const res = await fetch('/api/games', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(toPayload(S)),
+      body: JSON.stringify(toPayload(S, data && data.user)),
     });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'save failed');
     return res.json();

@@ -7,6 +7,7 @@
 
 import { authConfigured, startGoogle, callbackGoogle, logout, me } from './auth.js';
 import { saveGame, listGames, getGame, deleteGame } from './games.js';
+import { getStats } from './stats.js';
 
 const CANONICAL = 'scorechalk.com';
 
@@ -30,6 +31,12 @@ export default {
       // usable signed out, so "nobody is signed in" is the honest answer.
       if (!authConfigured(env)) return json({ user: null, auth: false });
       return json({ ...(await me(request, env)), auth: true });
+    }
+
+    if (url.pathname === '/api/stats') {
+      if (!authConfigured(env)) return json({ error: 'Sign-in is not configured.' }, 503);
+      if (request.method !== 'GET') return json({ error: 'Method not allowed' }, 405);
+      return getStats(request, env, url);
     }
 
     if (url.pathname === '/api/games') {
