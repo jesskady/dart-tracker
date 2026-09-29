@@ -79,12 +79,18 @@
     return wrap;
   }
 
-  /* Turn by turn, newest last, the way the leg was actually played. */
+  /* Turn by turn, newest last, the way the leg was actually played.
+
+     Numbered by round rather than by position in this list: turn_no is each
+     player's own count, so both players' entries in a round share a number,
+     which is how a darts scoreboard is written. A solo game numbers 1, 2,
+     3… either way. */
   function turnList(g, names) {
     const list = el('ol', 'turn-list');
 
     for (const t of g.turns) {
       const row = el('li', 'turn-row' + (t.bust ? ' is-bust' : ''));
+      row.append(el('span', 'turn-no', String(t.turn_no + 1)));
       row.append(el('span', 'turn-who', names[t.player_idx] || '?'));
       row.append(el('span', 'turn-darts', (t.darts || []).map((d) => d.label).join(' ') || '—'));
       row.append(el('span', 'turn-pts', t.bust ? 'bust' : String(t.points)));
