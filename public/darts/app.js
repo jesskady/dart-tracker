@@ -44,6 +44,34 @@ function load() {
   catch (e) { return null; }
 }
 
+/* ---------------- what clearing a game actually costs ----------------
+
+   Only one game is held on this device, so several things replace it. What
+   that loses depends on whether the game is also on the profile: a game
+   saved there survives being cleared here, and only the turns played since
+   that save are at risk. `savedTurns` is how many turns the profile has —
+   set when a game is saved, and when one is opened from the profile. */
+
+function savedState(g) {
+  if (!g) return { known: false, behind: 0 };
+  if (typeof g.savedTurns !== 'number') return { known: false, behind: 0 };
+  return { known: true, behind: Math.max(0, (g.log ? g.log.length : 0) - g.savedTurns) };
+}
+
+/* The sentence to put in front of someone before their local copy goes. */
+function clearingCost(g, lead) {
+  const { known, behind } = savedState(g);
+
+  if (!known) {
+    return `${lead} It is not saved to your profile, so it will be gone.`;
+  }
+  if (behind === 0) {
+    return `${lead} It is saved to your profile — you can pick it up again from there.`;
+  }
+  return `${lead} It is saved to your profile, but the ${behind} turn${behind === 1 ? '' : 's'} ` +
+         `played since that save will be lost.`;
+}
+
 /* ---------------- messages ---------------- */
 
 function say(text, ms = 2600) {
@@ -130,7 +158,7 @@ function buildSetup() {
     if (open && !open.over) {
       const who = open.players.map(p => p.name).join(' vs ');
       const ok = await askConfirm(
-        `Your game in progress — ${who} — will be replaced on this device.`,
+        clearingCost(open, `Your game in progress — ${who} — will be replaced on this device.`),
         'Start new game'
       );
       if (!ok) return;
@@ -182,7 +210,7 @@ async function resumeFromQuery() {
   if (open && !open.over && open.id !== id) {
     const who = open.players.map(p => p.name).join(' vs ');
     const ok = await askConfirm(
-      `Opening that game will replace your game in progress on this device — ${who}.`,
+      clearingCost(open, `Opening that game replaces your game in progress on this device — ${who}.`),
       'Open it'
     );
     if (!ok) return;
@@ -226,6 +254,7 @@ async function buildSaveButton() {
     btn.textContent = 'Saving…';
     try {
       await window.SCSync.saveNow(S);
+      save();                      // persist the new savedTurns mark
       btn.textContent = 'Saved';
       say('Saved to your profile');
       setTimeout(() => { btn.textContent = was; btn.disabled = false; }, 1600);
@@ -320,7 +349,7 @@ function buildBoard() {
   $('quitBtn').addEventListener('click', async () => {
     const names = S.players.map(p => `${p.name} on ${p.score}`).join(' and ');
     const ok = await askConfirm(
-      `This throws away the game in progress — ${names} — and goes back to setup.`,
+      clearingCost(S, `This clears the game in progress — ${names} — and goes back to setup.`),
       'End game');
     if (!ok) return;
     S = null; save(); location.reload();
@@ -622,7 +651,7 @@ function submitTurn() {
     render(); save();
     showWin(p);
     // fire and forget: the win is already safe locally
-    if (window.SCSync) window.SCSync.onGameOver(S);
+    if (window.SCSync) window.SCSync.onGameOver(S).then(save);
     return;
   }
 

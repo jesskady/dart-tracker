@@ -86,6 +86,8 @@ window.SCSync = (function () {
       mult: 1,
       log: [],
       over: g.ended_at != null,
+      // it came from the profile, so every turn on it is already there
+      savedTurns: g.turns.length,
     };
     if (g.winner_idx != null) S.winner = g.winner_idx;
 
@@ -139,13 +141,19 @@ window.SCSync = (function () {
     async onGameOver(S) {
       const data = await me();
       if (!data || !data.user) return;
-      try { await post(S); } catch (e) { /* the win is not lost, only unsynced */ }
+      try {
+        await post(S);
+        S.savedTurns = S.log.length;
+      } catch (e) { /* the win is not lost, only unsynced */ }
     },
 
     /* Called by the Save button, where the user asked for this explicitly and
        so must be told whether it worked. */
     async saveNow(S) {
       await post(S);
+      // records what the profile now holds, so the warnings before clearing
+      // this game can tell the truth about what is at risk
+      S.savedTurns = S.log.length;
     },
 
     async unfinished() {
