@@ -103,7 +103,7 @@ window.SCSync = (function () {
       if (!p) continue;
 
       const wasOpen = open[t.player_idx];
-      const thrown = t.detail || t.darts || [];
+      const thrown = t.detail || [];
       // mirrors breakdown(): the first double a player lands opens them
       if (!open[t.player_idx]) {
         for (const d of thrown) {

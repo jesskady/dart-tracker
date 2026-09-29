@@ -59,8 +59,7 @@ function validate(body) {
     if (!isInt(t.created_at)) return 'turn.created_at';
     // a bound on payload size, not a rule about any game — darts' own
     // three-per-turn limit belongs in the darts app, not here
-    const detail = t.detail ?? t.darts;
-    if (!Array.isArray(detail) || detail.length > MAX_DETAIL) return 'turn.detail';
+    if (!Array.isArray(t.detail) || t.detail.length > MAX_DETAIL) return 'turn.detail';
   }
 
   return null;
@@ -119,9 +118,7 @@ export async function saveGame(request, env) {
     for (const t of chunk) {
       binds.push(
         crypto.randomUUID(), body.id, t.player_idx, t.turn_no,
-        // accepts the old field name too, so a tab left open on the previous
-        // build cannot save a turn with its detail dropped
-        JSON.stringify(t.detail ?? t.darts), t.points, t.bust ? 1 : 0, t.score_after, t.created_at
+        JSON.stringify(t.detail), t.points, t.bust ? 1 : 0, t.score_after, t.created_at
       );
     }
     stmts.push(
@@ -196,14 +193,7 @@ export async function getGame(request, env, id) {
       ...game,
       config: parse(game.config, {}),
       players: players.results || [],
-      turns: (turns.results || []).map((t) => {
-        const detail = parse(t.detail, []);
-        // `darts` is emitted alongside `detail` only so a client still
-        // running the previous build rebuilds a game with its throws intact
-        // rather than silently emptying them. Safe to drop once nothing old
-        // is in circulation.
-        return { ...t, detail, darts: detail, bust: !!t.bust };
-      }),
+      turns: (turns.results || []).map((t) => ({ ...t, detail: parse(t.detail, []), bust: !!t.bust })),
     },
   });
 }
