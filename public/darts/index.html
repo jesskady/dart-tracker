@@ -11,8 +11,8 @@
 <!-- ?v= must be bumped whenever a stylesheet or app.js changes. Each file is
      cached independently at the edge, so without this a new index.html can
      load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="../shared.css?v=23">
-<link rel="stylesheet" href="style.css?v=23">
+<link rel="stylesheet" href="../shared.css?v=25">
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -44,6 +44,18 @@
       <span>Player 2</span>
       <input id="name2" type="text" placeholder="Player 2" autocomplete="off" maxlength="14">
     </label>
+
+    <!-- Which player the account holder is. Statistics depend on it, so it is
+         asked rather than guessed. Only shown when signed in and playing head
+         to head — there is nothing to record otherwise, and in practice mode
+         there is only one player to be. -->
+    <div class="field hidden" id="meRow">
+      <span>You are</span>
+      <div class="preset-row" id="meSel">
+        <button class="seg is-on" type="button" data-me="0">Player 1</button>
+        <button class="seg" type="button" data-me="1">Player 2</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -177,8 +189,8 @@
   </div>
 </div>
 
-<script src="/account.js?v=23" defer></script>
-<script src="sync.js?v=23"></script>
-<script src="app.js?v=23"></script>
+<script src="/account.js?v=25" defer></script>
+<script src="sync.js?v=25"></script>
+<script src="app.js?v=25"></script>
 </body>
 </html>

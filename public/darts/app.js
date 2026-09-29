@@ -20,6 +20,8 @@ function newGame(names, start, rules) {
     // one row instead of creating two.
     id: crypto.randomUUID(),
     startedAt: Date.now(),
+    // which player is the account holder, chosen on the setup screen
+    meIdx: rules.meIdx || 0,
     players: names.map(n => makePlayer(n, start, rules.doubleIn)),
     start,
     doubleIn: !!rules.doubleIn,
@@ -121,6 +123,42 @@ function buildSetup() {
 
   // two-player vs solo practice
   let playerCount = 2;
+
+  /* Which player is the account holder. Asked, never inferred: statistics
+     hang off this, and a wrong guess quietly credits someone else's darts to
+     you. Hidden unless it matters — signed out there is nothing to record,
+     and in practice mode there is only one player to be. */
+  let meIdx = 0;
+  let signedIn = false;
+  const meRow = $('meRow');
+  const meBtns = [...document.querySelectorAll('#meSel .seg')];
+
+  const showMeRow = () => meRow.classList.toggle('hidden', !signedIn || playerCount !== 2);
+
+  meBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      meBtns.forEach(b => b.classList.remove('is-on'));
+      btn.classList.add('is-on');
+      meIdx = parseInt(btn.dataset.me, 10);
+    });
+  });
+
+  // the buttons carry the typed names, so the question reads as itself
+  const labelMeBtns = () => {
+    meBtns[0].textContent = $('name1').value.trim() || 'Player 1';
+    meBtns[1].textContent = $('name2').value.trim() || 'Player 2';
+  };
+  $('name1').addEventListener('input', labelMeBtns);
+  $('name2').addEventListener('input', labelMeBtns);
+  labelMeBtns();
+
+  if (window.SCSync) {
+    window.SCSync.me().then(who => {
+      signedIn = !!(who && who.user);
+      showMeRow();
+    });
+  }
+
   const modeBtns = document.querySelectorAll('#modeRow .seg');
   modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -130,6 +168,11 @@ function buildSetup() {
       $('field2').classList.toggle('hidden', playerCount === 1);
       $('label1').textContent = playerCount === 1 ? 'Name' : 'Player 1';
       $('name1').placeholder = playerCount === 1 ? 'You' : 'Player 1';
+      if (playerCount === 1) {
+        meIdx = 0;                                  // solo: you are the only player
+        meBtns.forEach((b, i) => b.classList.toggle('is-on', i === 0));
+      }
+      showMeRow();
     });
   });
 
@@ -170,7 +213,8 @@ function buildSetup() {
 
     S = newGame(names, start, {
       doubleIn: toggles.doubleIn.classList.contains('is-on'),
-      doubleOut: toggles.doubleOut.classList.contains('is-on')
+      doubleOut: toggles.doubleOut.classList.contains('is-on'),
+      meIdx: playerCount === 1 ? 0 : meIdx
     });
     save();
     showGame();
@@ -190,23 +234,8 @@ function buildSetup() {
   }
 
   buildCloudResume(saved);
-  prefillMyName();
 }
 
-/* Pre-fills player one with the signed-in first name. Convenience, but also
-   what makes statistics reliable: the game records which player is the
-   account holder by matching this name, and player one is where the person
-   entering the darts almost always sits. Never overwrites typing. */
-async function prefillMyName() {
-  if (!window.SCSync) return;
-  const who = await window.SCSync.me();
-  if (!who || !who.user || !who.user.display_name) return;
-
-  const input = $('name1');
-  if (!input || input.value.trim()) return;
-  input.placeholder = who.user.display_name.trim().split(/\s+/)[0] || input.placeholder;
-  input.value = input.placeholder;
-}
 
 /* ?resume=<id> — arriving from a game tapped on the profile.
    Only one game is held locally, so opening one from the profile replaces

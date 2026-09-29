@@ -138,11 +138,14 @@ best checkout, best leg, 180s and so on — and every game links to its own
 breakdown, per player, with the leg turn by turn.
 
 Statistics need to know **which player is you**, or a game is two anonymous
-names and there is no whose to the average. `games.me_idx` records it,
-resolved when a game is saved by matching the signed-in display name against
-the player names. The setup screen pre-fills player one with that name to make
-the match reliable, and the fallback is player one — whoever enters the darts
-almost always sits there.
+names and there is no whose to the average. `games.me_idx` records it, and
+the setup screen **asks**: a **You are** row appears next to the names when
+you are signed in and playing head to head, its buttons carrying whatever
+names you typed. Practice mode does not ask — there is only one player to be.
+
+This was originally inferred by matching your Google display name against the
+player names. Inference is the wrong tool here: when it missed it did not fail
+loudly, it quietly credited your opponent's darts to you.
 
 Lifetime figures are aggregated in SQL; a single game's are computed in the
 browser from the turns `/api/games/:id` already returns.

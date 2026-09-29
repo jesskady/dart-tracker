@@ -302,3 +302,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .brand.compact.gamebar .backlink{justify-self:start;padding:2px}
 .brand.compact.gamebar h1{grid-column:2}
 .cloud-error{font-size:12.5px;color:#e2857a;text-align:center;padding:4px 0}
+
+/* The "you are" selector sits in a .field row, whose children are not
+   flexible by default — without this the two buttons collapse to the width
+   of the names in them. */
+#meRow .preset-row{flex:1;min-width:0}
+#meRow .seg{
+  flex:1;min-width:0;font-size:14px;padding:10px 4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
