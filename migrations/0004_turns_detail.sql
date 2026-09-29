@@ -1,0 +1,11 @@
+-- turns.darts -> turns.detail
+--
+-- The column held whatever a scoring event was made of, but it was named for
+-- the only game that existed. Cribbage has no darts; golf's "turn" is a hole.
+-- Renaming it now costs one statement and ten rows; renaming it after a second
+-- game exists would mean touching that game's code to keep a name that was
+-- already wrong.
+--
+-- The Worker must be deployed together with this: the running code selects
+-- `darts`, and that column stops existing here.
+ALTER TABLE turns RENAME COLUMN darts TO detail;

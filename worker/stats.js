@@ -29,7 +29,7 @@ export async function getStats(request, env, url) {
     `SELECT
        COUNT(*)                                            AS turns,
        COALESCE(SUM(t.points), 0)                          AS points,
-       COALESCE(SUM(json_array_length(t.darts)), 0)        AS darts,
+       COALESCE(SUM(json_array_length(t.detail)), 0)        AS darts,
        COALESCE(MAX(t.points), 0)                          AS best_turn,
        COALESCE(SUM(CASE WHEN t.points = 180 THEN 1 ELSE 0 END), 0)   AS n180,
        COALESCE(SUM(CASE WHEN t.points >= 140 THEN 1 ELSE 0 END), 0)  AS n140,
@@ -54,7 +54,7 @@ export async function getStats(request, env, url) {
      abandoned game cannot masquerade as a spectacular one. */
   const bestLeg = await env.DB.prepare(
     `SELECT MIN(d) AS best_leg FROM (
-       SELECT SUM(json_array_length(t.darts)) AS d
+       SELECT SUM(json_array_length(t.detail)) AS d
          FROM turns t
          JOIN games g ON g.id = t.game_id
         WHERE g.owner_user_id = ? AND g.game_type = ?

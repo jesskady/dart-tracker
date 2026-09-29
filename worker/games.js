@@ -18,6 +18,7 @@ import { currentUserId } from './auth.js';
    statements rather than one per turn. */
 const TURNS_PER_STATEMENT = 10;
 const MAX_TURNS = 400;
+const MAX_DETAIL = 64;
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -56,7 +57,10 @@ function validate(body) {
     if (!isInt(t.points)) return 'turn.points';
     if (!isInt(t.score_after)) return 'turn.score_after';
     if (!isInt(t.created_at)) return 'turn.created_at';
-    if (!Array.isArray(t.darts) || t.darts.length > 3) return 'turn.darts';
+    // a bound on payload size, not a rule about any game — darts' own
+    // three-per-turn limit belongs in the darts app, not here
+    const detail = t.detail ?? t.darts;
+    if (!Array.isArray(detail) || detail.length > MAX_DETAIL) return 'turn.detail';
   }
 
   return null;
@@ -115,15 +119,17 @@ export async function saveGame(request, env) {
     for (const t of chunk) {
       binds.push(
         crypto.randomUUID(), body.id, t.player_idx, t.turn_no,
-        JSON.stringify(t.darts), t.points, t.bust ? 1 : 0, t.score_after, t.created_at
+        // accepts the old field name too, so a tab left open on the previous
+        // build cannot save a turn with its detail dropped
+        JSON.stringify(t.detail ?? t.darts), t.points, t.bust ? 1 : 0, t.score_after, t.created_at
       );
     }
     stmts.push(
       env.DB.prepare(
-        `INSERT INTO turns (id, game_id, player_idx, turn_no, darts, points, bust, score_after, created_at)
+        `INSERT INTO turns (id, game_id, player_idx, turn_no, detail, points, bust, score_after, created_at)
          VALUES ${values}
          ON CONFLICT(game_id, player_idx, turn_no) DO UPDATE SET
-           darts = excluded.darts,
+           detail = excluded.detail,
            points = excluded.points,
            bust = excluded.bust,
            score_after = excluded.score_after`
@@ -180,7 +186,7 @@ export async function getGame(request, env, id) {
   ).bind(id).all();
 
   const turns = await env.DB.prepare(
-    `SELECT player_idx, turn_no, darts, points, bust, score_after, created_at
+    `SELECT player_idx, turn_no, detail, points, bust, score_after, created_at
        FROM turns WHERE game_id = ? ORDER BY turn_no, player_idx`
   ).bind(id).all();
 
@@ -190,7 +196,14 @@ export async function getGame(request, env, id) {
       ...game,
       config: parse(game.config, {}),
       players: players.results || [],
-      turns: (turns.results || []).map((t) => ({ ...t, darts: parse(t.darts, []), bust: !!t.bust })),
+      turns: (turns.results || []).map((t) => {
+        const detail = parse(t.detail, []);
+        // `darts` is emitted alongside `detail` only so a client still
+        // running the previous build rebuilds a game with its throws intact
+        // rather than silently emptying them. Safe to drop once nothing old
+        // is in circulation.
+        return { ...t, detail, darts: detail, bust: !!t.bust };
+      }),
     },
   });
 }

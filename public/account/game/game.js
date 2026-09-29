@@ -39,7 +39,7 @@
 
     for (const t of turns) {
       points += t.points;
-      darts += (t.darts || []).length;
+      darts += (t.detail || []).length;
       if (t.bust) busts += 1;
       if (t.points > best) best = t.points;
       if (t.points === 180) n180 += 1;
@@ -92,7 +92,7 @@
       const row = el('li', 'turn-row' + (t.bust ? ' is-bust' : ''));
       row.append(el('span', 'turn-no', String(t.turn_no + 1)));
       row.append(el('span', 'turn-who', names[t.player_idx] || '?'));
-      row.append(el('span', 'turn-darts', (t.darts || []).map((d) => d.label).join(' ') || '—'));
+      row.append(el('span', 'turn-darts', (t.detail || []).map((d) => d.label).join(' ') || '—'));
       row.append(el('span', 'turn-pts', t.bust ? 'bust' : String(t.points)));
       row.append(el('span', 'turn-left', String(t.score_after)));
       list.append(row);

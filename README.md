@@ -90,8 +90,13 @@ worker/
   stats.js        /api/stats: lifetime darts figures, in SQL
 migrations/
   0001_init.sql   users, games, game_players, turns
+
+A turn's `detail` column holds whatever that game's scoring event was made
+of — for darts, the throws. It is named for the general case rather than for
+darts, so a second game does not inherit a column named after the first.
   0002_...sql     games.updated_at
   0003_...sql     games.me_idx
+  0004_...sql     turns.darts -> turns.detail
 ```
 
 `public/` is what gets published and nothing outside it is, so

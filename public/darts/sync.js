@@ -31,7 +31,8 @@ window.SCSync = (function () {
       return {
         player_idx: t.player,
         turn_no: n,
-        darts: t.darts,
+        // whatever the scoring event was made of; for darts, the throws
+        detail: t.darts,
         points: t.bust ? 0 : t.pts,
         bust: !!t.bust,
         score_after: t.bust ? t.before : t.before - t.pts,
@@ -102,9 +103,10 @@ window.SCSync = (function () {
       if (!p) continue;
 
       const wasOpen = open[t.player_idx];
+      const thrown = t.detail || t.darts || [];
       // mirrors breakdown(): the first double a player lands opens them
       if (!open[t.player_idx]) {
-        for (const d of t.darts || []) {
+        for (const d of thrown) {
           if (d && d.dbl) { open[t.player_idx] = true; break; }
         }
       }
@@ -116,7 +118,7 @@ window.SCSync = (function () {
         wasOpen,
         pts,
         bust: !!t.bust,
-        darts: t.darts || [],
+        darts: thrown,
       });
 
       p.turns += 1;
