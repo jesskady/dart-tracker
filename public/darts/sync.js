@@ -33,7 +33,7 @@ window.SCSync = (function () {
 
     const norm = (s) => String(s).trim().toLowerCase();
     const full = norm(user.display_name);
-    const first = full.split(/s+/)[0];
+    const first = full.split(/\s+/)[0];
 
     let idx = S.players.findIndex((p) => norm(p.name) === full);
     if (idx < 0) idx = S.players.findIndex((p) => norm(p.name) === first);
