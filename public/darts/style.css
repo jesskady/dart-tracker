@@ -301,3 +301,4 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 }
 .brand.compact.gamebar .backlink{justify-self:start;padding:2px}
 .brand.compact.gamebar h1{grid-column:2}
+.cloud-error{font-size:12.5px;color:#e2857a;text-align:center;padding:4px 0}

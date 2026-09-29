@@ -164,6 +164,47 @@ function buildSetup() {
   buildCloudResume(saved);
 }
 
+/* ?resume=<id> — arriving from a game tapped on the profile.
+   Only one game is held locally, so opening one from the profile replaces
+   whatever is here. It asks first when that would lose an unfinished game
+   the player has not saved anywhere. */
+async function resumeFromQuery() {
+  const id = new URLSearchParams(location.search).get('resume');
+  if (!id) return;
+
+  // drop the parameter straight away, so a refresh does not re-open the game
+  // over whatever the player has done since
+  history.replaceState(null, '', location.pathname);
+
+  if (!window.SCSync) return;
+
+  const open = load();
+  if (open && !open.over && open.id !== id) {
+    const who = open.players.map(p => p.name).join(' vs ');
+    const ok = await askConfirm(
+      `Opening that game will replace your game in progress on this device — ${who}.`,
+      'Open it'
+    );
+    if (!ok) return;
+  }
+
+  try {
+    S = await window.SCSync.load(id);
+    save();
+    showGame();
+  } catch (e) {
+    // say() writes to the game screen, which is not showing — put it where
+    // the player actually is, next to the other resume options
+    const box = $('cloudResume');
+    if (box) {
+      const p = document.createElement('p');
+      p.className = 'cloud-error';
+      p.textContent = 'Could not open that game. Try it from the list below.';
+      box.prepend(p);
+    }
+  }
+}
+
 /* The Save button keeps an unfinished game on the profile so it can be picked
    up later, or on another device. It only appears when there is a profile to
    save to, which also keeps the row at three buttons for anyone playing
@@ -815,3 +856,4 @@ function render() {
 
 buildSetup();
 buildBoard();
+resumeFromQuery();

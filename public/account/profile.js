@@ -49,14 +49,35 @@
   const fmtDate = (ms) =>
     new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
+  function chevron() {
+    const wrap = el('span', 'game-go');
+    wrap.innerHTML =
+      '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
+      '<path d="M9 5.5 L15 12 L9 18.5" fill="none" stroke="currentColor" stroke-width="2.6" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return wrap;
+  }
+
   function gameRow(g) {
     const row = el('li', 'game-row');
+    const unfinished = !g.ended_at;
 
     const names = (g.players || []).map((p) => p.name);
     const won = g.winner_idx != null ? names[g.winner_idx] : null;
+    const label = names.join(' vs ') || 'Game';
+
+    // An unfinished game can be picked up; a finished one has nowhere to go
+    // yet, so it stays plain text rather than looking tappable and doing
+    // nothing. game_type picks the destination, so this needs no change when
+    // a second game exists.
+    const inner = unfinished ? el('a', 'game-inner game-link') : el('div', 'game-inner');
+    if (unfinished) {
+      inner.href = `/${encodeURIComponent(g.game_type)}/?resume=${encodeURIComponent(g.id)}`;
+      inner.setAttribute('aria-label', `Resume ${label}`);
+    }
 
     const main = el('div', 'game-main');
-    main.append(el('b', null, names.join(' vs ') || 'Game'));
+    main.append(el('b', null, label));
 
     const bits = [];
     if (g.config && g.config.start) bits.push(String(g.config.start));
@@ -68,11 +89,13 @@
     const side = el('div', 'game-side');
     // an unfinished game is the useful thing to spot in this list, so it is
     // the one that gets a badge rather than the finished ones
-    side.append(el('span', g.ended_at ? 'game-tag' : 'game-tag live',
-      g.ended_at ? (won ? `${won} won` : 'Finished') : 'In progress'));
+    side.append(el('span', unfinished ? 'game-tag live' : 'game-tag',
+      unfinished ? 'Resume' : (won ? `${won} won` : 'Finished')));
     side.append(el('small', null, fmtDate(g.ended_at || g.updated_at || g.started_at)));
 
-    row.append(main, side);
+    inner.append(main, side);
+    if (unfinished) inner.append(chevron());
+    row.append(inner);
     return row;
   }
 

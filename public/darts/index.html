@@ -11,8 +11,8 @@
 <!-- ?v= must be bumped whenever a stylesheet or app.js changes. Each file is
      cached independently at the edge, so without this a new index.html can
      load against a stale app.js and misbehave. -->
-<link rel="stylesheet" href="../shared.css?v=18">
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="../shared.css?v=20">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 
@@ -85,10 +85,15 @@
 <!-- ============ GAME ============ -->
 <section id="game" class="screen hidden">
 
-  <!-- Leaving mid-game is safe: the game stays in localStorage and is offered
+  <!-- Back to the darts setup rather than the chooser: starting another leg
+       is the common reason to leave, and the chooser is one more tap from
+       there. Navigating reloads the page, which is what rebuilds the setup
+       screen with a current Resume button.
+
+       Leaving mid-game is safe: the game stays in localStorage and is offered
        back as Resume, and Save puts it on the profile for other devices. -->
   <header class="brand compact gamebar">
-    <a class="backlink" href="/">&lsaquo; All games</a>
+    <a class="backlink" href="/darts/">&lsaquo; Back</a>
     <h1>Darts</h1>
   </header>
 
@@ -172,8 +177,8 @@
   </div>
 </div>
 
-<script src="/account.js?v=18" defer></script>
-<script src="sync.js?v=18"></script>
-<script src="app.js?v=18"></script>
+<script src="/account.js?v=20" defer></script>
+<script src="sync.js?v=20"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>
