@@ -1,4 +1,4 @@
-/* Score Chalk — two-player countdown scoring */
+/* Score Chalk — countdown scoring for one to four players */
 
 const KEY = 'dart-tracker-v1';
 const MAX_DARTS = 3;
@@ -121,8 +121,9 @@ function buildSetup() {
     });
   });
 
-  // two-player vs solo practice
+  // solo practice, or two to four players
   let playerCount = 2;
+  const nameInputs = [1, 2, 3, 4].map(n => $('name' + n));
 
   /* Which player is the account holder. Asked, never inferred: statistics
      hang off this, and a wrong guess quietly credits someone else's darts to
@@ -133,7 +134,7 @@ function buildSetup() {
   const meRow = $('meRow');
   const meBtns = [...document.querySelectorAll('#meSel .seg')];
 
-  const showMeRow = () => meRow.classList.toggle('hidden', !signedIn || playerCount !== 2);
+  const showMeRow = () => meRow.classList.toggle('hidden', !signedIn || playerCount < 2);
 
   meBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -145,11 +146,9 @@ function buildSetup() {
 
   // the buttons carry the typed names, so the question reads as itself
   const labelMeBtns = () => {
-    meBtns[0].textContent = $('name1').value.trim() || 'Player 1';
-    meBtns[1].textContent = $('name2').value.trim() || 'Player 2';
+    meBtns.forEach((b, i) => { b.textContent = nameInputs[i].value.trim() || `Player ${i + 1}`; });
   };
-  $('name1').addEventListener('input', labelMeBtns);
-  $('name2').addEventListener('input', labelMeBtns);
+  nameInputs.forEach(input => input.addEventListener('input', labelMeBtns));
   labelMeBtns();
 
   if (window.SCSync) {
@@ -165,11 +164,13 @@ function buildSetup() {
       modeBtns.forEach(b => b.classList.remove('is-on'));
       btn.classList.add('is-on');
       playerCount = parseInt(btn.dataset.players, 10);
-      $('field2').classList.toggle('hidden', playerCount === 1);
+      [2, 3, 4].forEach(n => $('field' + n).classList.toggle('hidden', n > playerCount));
+      meBtns.forEach((b, i) => b.classList.toggle('hidden', i >= playerCount));
       $('label1').textContent = playerCount === 1 ? 'Name' : 'Player 1';
       $('name1').placeholder = playerCount === 1 ? 'You' : 'Player 1';
-      if (playerCount === 1) {
-        meIdx = 0;                                  // solo: you are the only player
+      // solo, or the chosen player is no longer in the game: fall back to player one
+      if (meIdx >= playerCount) {
+        meIdx = 0;
         meBtns.forEach((b, i) => b.classList.toggle('is-on', i === 0));
       }
       showMeRow();
@@ -209,7 +210,7 @@ function buildSetup() {
 
     const names = playerCount === 1
       ? [$('name1').value.trim() || 'You']
-      : [$('name1').value.trim() || 'Player 1', $('name2').value.trim() || 'Player 2'];
+      : nameInputs.slice(0, playerCount).map((input, i) => input.value.trim() || `Player ${i + 1}`);
 
     S = newGame(names, start, {
       doubleIn: toggles.doubleIn.classList.contains('is-on'),
@@ -402,7 +403,7 @@ function buildBoard() {
 
   $('rematchBtn').addEventListener('click', () => {
     S = newGame(S.players.map(p => p.name), S.start,
-                { doubleIn: S.doubleIn, doubleOut: S.doubleOut });
+                { doubleIn: S.doubleIn, doubleOut: S.doubleOut, meIdx: S.meIdx });
     save();
     $('winOverlay').classList.add('hidden');
     render();
@@ -411,9 +412,9 @@ function buildBoard() {
   $('newBtn').addEventListener('click', () => { S = null; save(); location.reload(); });
 
   // tapping a player card switches whose turn it is (fixes mis-taps)
-  [0, 1].forEach(i => {
+  [0, 1, 2, 3].forEach(i => {
     $('p' + i).addEventListener('click', () => {
-      if (S.over || S.cur === i || S.players.length < 2) return;
+      if (S.over || S.cur === i || i >= S.players.length) return;
       if (S.darts.length) { say('Clear the current turn first'); return; }
       S.cur = i;
       render(); save();
@@ -704,7 +705,7 @@ function submitTurn() {
   else if (S.doubleIn && !wasOpen && open) say(`${p.name} is in`);
   else if (S.doubleIn && !open) say(`${p.name} still needs a double to open`);
 
-  if (S.players.length > 1) S.cur = 1 - S.cur;
+  passTurn();
   render(); save();
 }
 
@@ -733,8 +734,13 @@ function bustTurn() {
   S.mult = 1;
 
   say(`Bust — ${p.name} stays on ${p.score}`);
-  if (S.players.length > 1) S.cur = 1 - S.cur;
+  passTurn();
   render(); save();
+}
+
+// play goes round the players in order
+function passTurn() {
+  S.cur = (S.cur + 1) % S.players.length;
 }
 
 async function undoTurn() {
@@ -864,7 +870,9 @@ function render() {
 
   // scoreboard
   $('scoreboard').classList.toggle('solo', solo);
-  $('p1').classList.toggle('hidden', solo);
+  // three or four across: the player on turn gets the wide card
+  $('scoreboard').classList.toggle('crowded', S.players.length > 2);
+  [0, 1, 2, 3].forEach(i => $('p' + i).classList.toggle('hidden', i >= S.players.length));
 
   S.players.forEach((p, i) => {
     const el = $('p' + i);
@@ -889,7 +897,11 @@ function render() {
     }
 
     const avg = p.turns ? (p.points / p.turns).toFixed(1) : '—';
-    el.querySelector('.pmeta').textContent = `${p.turns} turns · avg ${avg}`;
+    // two spans so a crowded scoreboard can stack them; CSS supplies the ' · '
+    const meta = el.querySelector('.pmeta');
+    meta.replaceChildren(document.createElement('span'), document.createElement('span'));
+    meta.children[0].textContent = `${p.turns} turns`;
+    meta.children[1].textContent = `avg ${avg}`;
   });
 
   // dart slots

@@ -115,6 +115,23 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .ppend.checkout{color:var(--green)}
 
 .pmeta{font-size:10px;color:var(--dim);min-height:12px;line-height:1.2}
+.pmeta span+span::before{content:' · '}
+
+/* Three or four players, side by side. The player on turn takes the wide card
+   — it has to fit the projected score beside their total — and hands it on
+   with the turn. Everyone else's stats stack under their score to fit the
+   narrow column. */
+.scoreboard.crowded{display:flex;gap:6px}
+.scoreboard.crowded .player{
+  flex:1 1 0;min-width:0;padding:5px 3px 4px;
+  transition:flex-grow .2s,border-color .15s,background .15s;
+}
+.scoreboard.crowded .player.active{flex-grow:2}
+.scoreboard.crowded .pscore{font-size:22px;gap:4px}
+.scoreboard.crowded .player.active .pscore{font-size:30px}
+.scoreboard.crowded .ppend{font-size:15px}
+.scoreboard.crowded .pmeta{display:flex;flex-direction:column;align-items:center;min-height:24px}
+.scoreboard.crowded .pmeta span+span::before{content:none}
 
 /* ---------- Turn bar ---------- */
 .turnbar{

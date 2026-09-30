@@ -128,8 +128,9 @@ window.SCSync = (function () {
 
     S.players.forEach((p, i) => { p.opened = open[i]; });
 
-    // whoever has had fewer turns is up next; equal means play returns to the first
-    if (S.players.length > 1) S.cur = S.players[0].turns > S.players[1].turns ? 1 : 0;
+    // play goes round in order, so the first player with the fewest turns is up next
+    const fewest = Math.min(...S.players.map((p) => p.turns));
+    S.cur = S.players.findIndex((p) => p.turns === fewest);
 
     return S;
   }

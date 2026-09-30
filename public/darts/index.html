@@ -12,7 +12,7 @@
      cached independently at the edge, so without this a new index.html can
      load against a stale app.js and misbehave. -->
 <link rel="stylesheet" href="../shared.css?v=29">
-<link rel="stylesheet" href="style.css?v=29">
+<link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 
   <header class="brand">
     <h1>Darts</h1>
-    <p>Two-player countdown scoring</p>
+    <p>Countdown scoring for one to four players</p>
   </header>
 
   <div class="card">
@@ -30,8 +30,10 @@
     <!-- class is deliberately NOT .preset: the score presets below are swept
          by class, and these must never be caught by that -->
     <div class="preset-row" id="modeRow">
-      <button class="seg is-on" data-players="2">Two player</button>
       <button class="seg" data-players="1">Practice</button>
+      <button class="seg is-on" data-players="2">2 players</button>
+      <button class="seg" data-players="3">3 players</button>
+      <button class="seg" data-players="4">4 players</button>
     </div>
   </div>
 
@@ -44,16 +46,26 @@
       <span>Player 2</span>
       <input id="name2" type="text" placeholder="Player 2" autocomplete="off" maxlength="14">
     </label>
+    <label class="field hidden" id="field3">
+      <span>Player 3</span>
+      <input id="name3" type="text" placeholder="Player 3" autocomplete="off" maxlength="14">
+    </label>
+    <label class="field hidden" id="field4">
+      <span>Player 4</span>
+      <input id="name4" type="text" placeholder="Player 4" autocomplete="off" maxlength="14">
+    </label>
 
     <!-- Which player the account holder is. Statistics depend on it, so it is
-         asked rather than guessed. Only shown when signed in and playing head
-         to head — there is nothing to record otherwise, and in practice mode
-         there is only one player to be. -->
+         asked rather than guessed. Only shown when signed in and playing
+         against others — there is nothing to record otherwise, and in practice
+         mode there is only one player to be. -->
     <div class="field hidden" id="meRow">
       <span>You are</span>
       <div class="preset-row" id="meSel">
         <button class="seg is-on" type="button" data-me="0">Player 1</button>
         <button class="seg" type="button" data-me="1">Player 2</button>
+        <button class="seg hidden" type="button" data-me="2">Player 3</button>
+        <button class="seg hidden" type="button" data-me="3">Player 4</button>
       </div>
     </div>
   </div>
@@ -125,6 +137,16 @@
       <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>
       <span class="pmeta"></span>
     </button>
+    <button class="player hidden" id="p2">
+      <span class="pname"></span>
+      <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>
+      <span class="pmeta"></span>
+    </button>
+    <button class="player hidden" id="p3">
+      <span class="pname"></span>
+      <span class="pscore"><b class="pnum"></b><i class="ppend"></i></span>
+      <span class="pmeta"></span>
+    </button>
   </div>
 
   <div class="turnbar">
@@ -190,7 +212,7 @@
 </div>
 
 <script src="/account.js?v=29" defer></script>
-<script src="sync.js?v=29"></script>
-<script src="app.js?v=29"></script>
+<script src="sync.js?v=30"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>
